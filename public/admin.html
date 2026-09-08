@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administración — BELAND HOUSE</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- ── Acceso ─────────────────────────────────────────── -->
+<section class="acceso" id="pantallaAcceso">
+  <div class="acceso__caja">
+    <div class="acceso__logo" id="accesoLogo">B</div>
+    <h1>Administración</h1>
+    <p>Inventario, ventas y cartera de <span id="accesoMarca">BELAND HOUSE</span>.</p>
+    <form id="formAcceso">
+      <label class="campo">
+        <span>Correo</span>
+        <input class="input" type="email" id="correo" autocomplete="username" required>
+      </label>
+      <label class="campo">
+        <span>Contraseña</span>
+        <input class="input" type="password" id="clave" autocomplete="current-password" required>
+      </label>
+      <p class="error-msg" id="errorAcceso"></p>
+      <button class="btn btn--metal btn--ancho" type="submit" id="btnEntrar">Entrar</button>
+    </form>
+  </div>
+</section>
+
+<!-- ── Aplicación ─────────────────────────────────────── -->
+<div class="app oculto" id="app">
+  <aside class="lateral">
+    <div class="lateral__marca">
+      <span class="lateral__logo" id="panelLogo">B</span>
+      <span>
+        <span class="lateral__nombre" id="panelMarca">BELAND HOUSE</span>
+        <span class="lateral__rol">Panel de control</span>
+      </span>
+    </div>
+
+    <button class="tab activo" data-vista="dashboard">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Resumen
+    </button>
+    <button class="tab" data-vista="productos">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+      Inventario
+      <span class="tab__alerta oculto" id="alertaStock">0</span>
+    </button>
+    <button class="tab" data-vista="venta">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Registrar venta
+    </button>
+    <button class="tab" data-vista="cobros">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      Cobros
+      <span class="tab__alerta oculto" id="alertaCobros">0</span>
+    </button>
+    <button class="tab" data-vista="informes">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      Informes
+    </button>
+
+    <div class="lateral__pie">
+      <span class="lateral__correo" id="correoActivo"></span>
+      <button class="btn btn--fantasma btn--sm btn--ancho" id="btnSalir">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="panel-main" id="contenido"></main>
+</div>
+
+<!-- ── Modal genérico ─────────────────────────────────── -->
+<div class="modal-velo" id="modalVelo">
+  <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
+</div>
+
+<div class="aviso" id="aviso"></div>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BELAND HOUSE — Sports &amp; Supplements</title>
+<meta name="description" content="Creatina, proteína, ropa deportiva y accesorios de gimnasio. Pedidos por WhatsApp.">
+<link rel="icon" href="img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- ── Barra superior ─────────────────────────────────── -->
+<header class="nav" id="nav">
+  <div class="nav__top">
+    <a class="nav__marca" href="#inicio">
+      <span class="nav__logo" id="marcaLogo">B</span>
+      <span class="nav__marca-texto">
+        <span class="nav__nombre" id="marcaNombre">BELAND HOUSE</span>
+        <span class="nav__tagline" id="marcaTagline">Sports &amp; Supplements</span>
+      </span>
+    </a>
+
+    <div class="nav__buscar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input class="input" id="buscar" type="search" placeholder="Buscar productos, marcas…" aria-label="Buscar productos">
+    </div>
+
+    <div class="nav__acciones">
+      <a class="nav__icono" href="admin.html" aria-label="Administrar" title="Administrar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </a>
+      <button class="carrito-btn" id="abrirCarrito" aria-label="Abrir pedido">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span class="carrito-btn__conteo" id="conteoCarrito">0</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="nav__barra">
+    <nav class="nav__links">
+      <a href="#inicio">Inicio</a>
+      <a href="#colecciones">Colecciones</a>
+      <a href="#catalogo">Catálogo</a>
+      <a href="#contacto">Contáctanos</a>
+      <a href="admin.html">Administrar</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ── Portada ────────────────────────────────────────── -->
+<section class="hero" id="inicio">
+  <div class="hero__inner">
+    <div>
+      <span class="hero__eyebrow">Entrega en Montería</span>
+      <h1 class="hero__titulo">
+        Todo para entrenar,
+        <span class="hero__brillo">en un solo lugar</span>
+      </h1>
+      <p class="hero__texto">
+        Suplementos, ropa y accesorios seleccionados uno por uno.
+        Escoge lo que necesitas, arma tu pedido y lo cerramos por WhatsApp.
+      </p>
+      <div class="hero__acciones">
+        <a class="btn btn--metal" href="#catalogo">Ver catálogo</a>
+        <a class="btn btn--fantasma" href="#contacto">Hablar con nosotros</a>
+      </div>
+
+      <div class="hero__datos">
+        <div class="hero__dato">
+          <strong id="statProductos">—</strong>
+          <span>Productos</span>
+        </div>
+        <div class="hero__dato">
+          <strong id="statCategorias">—</strong>
+          <span>Categorías</span>
+        </div>
+        <div class="hero__dato">
+          <strong>24 h</strong>
+          <span>Respuesta</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firma visual: la marca -->
+    <div class="marca-card">
+      <div class="marca-card__glow"></div>
+      <div class="marca-card__logo">
+        <img id="heroLogo" src="img/logo.png" alt="BELAND HOUSE" onerror="this.style.display='none';this.nextElementSibling.hidden=false">
+        <span class="marca-card__inicial" hidden>BH</span>
+      </div>
+      <span class="marca-card__nombre">BELAND HOUSE</span>
+      <span class="marca-card__tag">Sports &amp; Supplements</span>
+      <div class="marca-card__pie">
+        <span>Montería, Córdoba</span>
+        <a href="https://instagram.com/beland.house" target="_blank" rel="noopener">@beland.house</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Colecciones ────────────────────────────────────── -->
+<section class="colecciones" id="colecciones">
+  <header class="seccion">
+    <span class="seccion__eyebrow">Explora</span>
+    <h2 class="seccion__titulo">Colecciones</h2>
+    <p class="seccion__nota">Elige una categoría para empezar tu pedido</p>
+  </header>
+  <div class="tiras" id="tiras"></div>
+</section>
+
+<!-- ── Catálogo ───────────────────────────────────────── -->
+<main class="catalogo" id="catalogo">
+  <header class="seccion seccion--fila">
+    <div>
+      <span class="seccion__eyebrow">Catálogo</span>
+      <h2 class="seccion__titulo">Todos los productos</h2>
+      <p class="seccion__nota">Filtra por categoría o busca lo que necesitas</p>
+    </div>
+    <a class="seccion__accion" href="#contacto">
+      ¿Buscas algo especial?
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+    </a>
+  </header>
+
+  <div class="barra-filtros">
+    <div class="barra-filtros__chips" id="chips">
+      <button class="chip activo" data-cat="todas">Todo</button>
+    </div>
+
+    <div class="barra-filtros__derecha">
+      <label class="interruptor">
+        <input type="checkbox" id="soloDisponibles">
+        <span class="interruptor__pista"></span>
+        Solo disponibles
+      </label>
+      <select class="select" id="orden" aria-label="Ordenar">
+        <option value="nuevo">Más nuevos</option>
+        <option value="barato">Precio: menor</option>
+        <option value="caro">Precio: mayor</option>
+        <option value="az">Nombre A–Z</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="rejilla" id="rejilla"></div>
+  <div id="estado"></div>
+</main>
+
+<!-- ── Contacto ───────────────────────────────────────── -->
+<section class="contacto" id="contacto">
+  <div class="contacto__grid">
+    <div>
+      <h2>¿Te asesoramos?</h2>
+      <p>Escríbenos qué buscas y para qué entrenas. Te decimos qué te sirve, cuánto cuesta y cuándo lo tienes en la mano.</p>
+    </div>
+    <div class="contacto__medios">
+      <a class="medio" id="linkWhats" target="_blank" rel="noopener">
+        <span class="medio__icono">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm0 18.15a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.24-8.23 2.2 0 4.27.86 5.83 2.42a8.18 8.18 0 0 1 2.41 5.82c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.79.97-.14.16-.29.18-.54.06a6.7 6.7 0 0 1-3.35-2.93c-.25-.43.25-.4.72-1.33.08-.16.04-.3-.02-.42-.06-.12-.56-1.35-.77-1.84-.2-.48-.4-.42-.56-.43h-.47c-.16 0-.42.06-.64.3-.22.25-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.59 4.11 3.63 1.53.66 2.13.72 2.9.6.46-.07 1.47-.6 1.68-1.18.2-.58.2-1.08.15-1.18-.06-.11-.22-.17-.47-.29Z"/></svg>
+        </span>
+        <span>
+          <strong id="textoWhats">WhatsApp</strong>
+          <span>Pedidos y asesoría</span>
+        </span>
+      </a>
+      <a class="medio" id="linkInstagram" target="_blank" rel="noopener">
+        <span class="medio__icono">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </span>
+        <span>
+          <strong id="textoInstagram">Instagram</strong>
+          <span>Novedades y ofertas</span>
+        </span>
+      </a>
+      <a class="medio" id="linkCorreo">
+        <span class="medio__icono">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+        </span>
+        <span>
+          <strong id="textoCorreo">Correo</strong>
+          <span>Pedidos al por mayor</span>
+        </span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer class="pie">
+  <div class="pie__inner">
+    <span id="pieMarca">© BELAND HOUSE</span>
+    <a href="admin.html">Acceso administradora</a>
+  </div>
+</footer>
+
+<!-- ── Cajón del pedido ───────────────────────────────── -->
+<div class="velo" id="velo"></div>
+<aside class="cajon" id="cajon" aria-label="Tu pedido">
+  <div class="cajon__cabeza">
+    <h2>Tu pedido</h2>
+    <button class="cajon__cerrar" id="cerrarCarrito" aria-label="Cerrar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="cajon__lista" id="lineasCarrito"></div>
+
+  <div class="cajon__pie">
+    <div class="cajon__total">
+      <span>Total</span>
+      <strong id="totalCarrito">$ 0</strong>
+    </div>
+    <button class="btn btn--metal btn--ancho" id="pedirWhats" disabled>Pedir por WhatsApp</button>
+    <button class="btn btn--fantasma btn--ancho" id="pedirCorreo" disabled>Enviar por correo</button>
+  </div>
+</aside>
+
+<div class="aviso" id="aviso"></div>
+
+<!-- ── WhatsApp flotante ──────────────────────────────── -->
+<a class="wsp" id="wspFlotante" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm5.52 11.99c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.79.97-.14.16-.29.18-.54.06a6.7 6.7 0 0 1-3.35-2.93c-.25-.43.25-.4.72-1.33.08-.16.04-.3-.02-.42-.06-.12-.56-1.35-.77-1.84-.2-.48-.4-.42-.56-.43h-.47c-.16 0-.42.06-.64.3-.22.25-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.59 4.11 3.63 1.53.66 2.13.72 2.9.6.46-.07 1.47-.6 1.68-1.18.2-.58.2-1.08.15-1.18-.06-.11-.22-.17-.47-.29Z"/></svg>
+  <span>Escríbenos</span>
+</a>
+
+<script type="module" src="js/tienda.js"></script>
+</body>
+</html>

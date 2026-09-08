@@ -1,0 +1,22 @@
+{
+  "name": "acero-gym",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "css": "sass scss/main.scss public/css/main.css --style=expanded --no-source-map",
+    "css:watch": "sass --watch scss/main.scss public/css/main.css --no-source-map",
+    "crear-admin": "node server/crear-admin.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "sass": "^1.77.0"
+  }
+}
