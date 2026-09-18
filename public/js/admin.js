@@ -29,10 +29,18 @@ document.addEventListener('keydown', (e) => e.key === 'Escape' && cerrarModal())
 function pintarMarca() {
   $('#accesoMarca').textContent = NEGOCIO.nombre;
   $('#panelMarca').textContent = NEGOCIO.nombre;
-  [$('#accesoLogo'), $('#panelLogo')].forEach((el) => {
-    if (NEGOCIO.logo) el.innerHTML = `<img src="${escapar(NEGOCIO.logo)}" alt="" style="width:100%;height:100%;object-fit:contain">`;
-    else el.textContent = NEGOCIO.inicial;
-  });
+
+  const selloEl = $('#accesoLogo');
+  if (selloEl) {
+    if (NEGOCIO.sello) selloEl.innerHTML = `<img src="${escapar(NEGOCIO.sello)}" alt="" style="width:100%;height:100%;object-fit:cover">`;
+    else selloEl.textContent = NEGOCIO.inicial;
+  }
+
+  const iconoEl = $('#panelLogo');
+  if (iconoEl) {
+    if (NEGOCIO.logo) iconoEl.innerHTML = `<img src="${escapar(NEGOCIO.logo)}" alt="" style="width:100%;height:100%;object-fit:contain">`;
+    else iconoEl.textContent = NEGOCIO.inicial;
+  }
 }
 
 // ── Acceso ───────────────────────────────────────────────
@@ -191,7 +199,15 @@ function modalProducto(p = null) {
       <div class="campo ancho-total"><span class="calculo" id="margenVivo">Margen —</span></div>
       <label class="campo"><span>Stock actual</span><input class="input" name="stock" type="number" min="0" step="1" required value="${p?.stock ?? 0}"></label>
       <label class="campo"><span>Avisar cuando baje de</span><input class="input" name="stock_minimo" type="number" min="0" step="1" required value="${p?.stock_minimo ?? 5}"></label>
-      <label class="campo ancho-total"><span>Imagen (URL)</span><input class="input" name="imagen_url" placeholder="https://…" value="${escapar(p?.imagen_url || '')}"></label>
+      <label class="campo ancho-total">
+        <span>Foto del producto</span>
+        <div class="subida-img">
+          <img id="previewImg" class="subida-img__preview ${p?.imagen_url ? '' : 'oculto'}" src="${escapar(p?.imagen_url || '')}" alt="">
+          <input class="input" type="file" id="archivoImg" accept="image/*" capture="environment">
+          <span class="subida-img__ayuda" id="ayudaImg">Elige una foto desde tu celular o computador.</span>
+        </div>
+        <input type="hidden" name="imagen_url" id="imagenUrl" value="${escapar(p?.imagen_url || '')}">
+      </label>
       <label class="campo ancho-total"><span>Descripción</span><textarea class="textarea" name="descripcion">${escapar(p?.descripcion || '')}</textarea></label>
       <label class="interruptor ancho-total"><input type="checkbox" name="activo" ${p?.activo !== false ? 'checked' : ''}><span class="interruptor__pista"></span> Visible en la tienda</label>
       <div class="modal__pie ancho-total">
@@ -210,15 +226,41 @@ function modalProducto(p = null) {
   form.precio_venta.addEventListener('input', margen);
   margen();
 
+  let archivoElegido = null;
+  const inputArchivo = $('#archivoImg');
+  const previewImg = $('#previewImg');
+  const ayudaImg = $('#ayudaImg');
+  inputArchivo.addEventListener('change', () => {
+    const file = inputArchivo.files?.[0];
+    if (!file) return;
+    archivoElegido = file;
+    previewImg.src = URL.createObjectURL(file);
+    previewImg.classList.remove('oculto');
+    ayudaImg.textContent = file.name;
+  });
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const f = new FormData(form);
-    const datos = { nombre: f.get('nombre').trim(), marca: f.get('marca').trim() || null, categoria_id: f.get('categoria_id') || null, precio_fabrica: +f.get('precio_fabrica'), precio_venta: +f.get('precio_venta'), stock: +f.get('stock'), stock_minimo: +f.get('stock_minimo'), imagen_url: f.get('imagen_url').trim() || null, descripcion: f.get('descripcion').trim() || null, activo: f.get('activo') === 'on' };
+    const btnGuardar = form.querySelector('button[type="submit"]');
+    const textoOriginal = btnGuardar.textContent;
     try {
+      if (archivoElegido) {
+        btnGuardar.disabled = true;
+        btnGuardar.textContent = 'Subiendo foto…';
+        const url = await apiProductos.subirImagen(archivoElegido);
+        form.imagen_url.value = url;
+      }
+      const f = new FormData(form);
+      const datos = { nombre: f.get('nombre').trim(), marca: f.get('marca').trim() || null, categoria_id: f.get('categoria_id') || null, precio_fabrica: +f.get('precio_fabrica'), precio_venta: +f.get('precio_venta'), stock: +f.get('stock'), stock_minimo: +f.get('stock_minimo'), imagen_url: f.get('imagen_url').trim() || null, descripcion: f.get('descripcion').trim() || null, activo: f.get('activo') === 'on' };
+      btnGuardar.textContent = esNuevo ? 'Creando…' : 'Guardando…';
       if (esNuevo) await apiProductos.crear(datos);
       else await apiProductos.actualizar(p.id, datos);
       cerrarModal(); avisar(esNuevo ? 'Producto creado' : 'Cambios guardados'); await recargar(); ir('productos');
-    } catch (err) { avisar(err.message, 'error'); }
+    } catch (err) {
+      avisar(err.message, 'error');
+      btnGuardar.disabled = false;
+      btnGuardar.textContent = textoOriginal;
+    }
   });
 
   $('#modal').querySelector('[data-borrar]')?.addEventListener('click', async () => {
@@ -264,9 +306,8 @@ function vVenta() {
           <form id="formVenta" class="form-grid" style="margin-top:18px">
             <label class="campo ancho-total"><span>Cliente</span><input class="input" name="cliente_nombre" required placeholder="Nombre"></label>
             <label class="campo ancho-total"><span>Teléfono</span><input class="input" name="cliente_telefono" placeholder="3001234567"></label>
-            <label class="campo"><span>Pago</span><select class="select" name="tipo" id="tipoPago"><option value="contado">Contado</option><option value="credito">Crédito</option></select></label>
-            <label class="campo oculto" id="campoVence"><span>Vence el</span><input class="input" name="fecha_vencimiento" type="date" value="${hoyISO()}"></label>
-            <label class="campo ancho-total oculto" id="campoAbono"><span>Abono inicial</span><input class="input" name="abono" type="number" min="0" step="1" value="0"></label>
+            <label class="campo"><span>Fecha de pago</span><input class="input" name="fecha_pago" type="date" value="${hoyISO()}" required></label>
+            <label class="campo"><span>Método</span><select class="select" name="metodo_pago"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="nequi">Nequi / Daviplata</option></select></label>
             <label class="campo ancho-total"><span>Nota</span><input class="input" name="nota" placeholder="Opcional…"></label>
             <button class="btn btn--metal btn--ancho ancho-total" type="submit" id="btnGuardarVenta" disabled>Guardar venta</button>
           </form>
@@ -276,11 +317,6 @@ function vVenta() {
 
   pintarListaVenta(); pintarTicket();
   $('#buscarVenta').addEventListener('input', (e) => pintarListaVenta(e.target.value));
-  $('#tipoPago').addEventListener('change', (e) => {
-    const credito = e.target.value === 'credito';
-    $('#campoVence').classList.toggle('oculto', !credito);
-    $('#campoAbono').classList.toggle('oculto', !credito);
-  });
   $('#formVenta').addEventListener('submit', guardarVenta);
 }
 
@@ -306,7 +342,7 @@ function pintarTicket() {
   const cont = $('#ticketLineas'); if (!cont) return;
   const total = S.ticket.reduce((s, l) => s + l.precio_unitario * l.cantidad, 0);
   const costo = S.ticket.reduce((s, l) => s + l.costo_unitario * l.cantidad, 0);
-  cont.innerHTML = S.ticket.length ? S.ticket.map((l) => `<div class="ticket-linea"><span><span class="ticket-linea__nombre">${escapar(l.nombre_producto)}</span><span class="ticket-linea__sub">${money(l.precio_unitario * l.cantidad)}</span></span><span class="paso-cant"><button type="button" data-tmenos="${l.producto_id}">−</button><span>${l.cantidad}</span><button type="button" data-tmas="${l.producto_id}" ${l.cantidad >= l.max ? 'disabled' : ''}>+</button></span><button type="button" class="ticket-linea__quitar" data-tquitar="${l.producto_id}">✕</button></div>`).join('') : '<p class="mensaje-vacio">Agrega productos.</p>';
+  cont.innerHTML = S.ticket.length ? S.ticket.map((l) => `<div class="ticket-linea"><div class="ticket-linea__info"><span class="ticket-linea__nombre">${escapar(l.nombre_producto)}</span><span class="ticket-linea__sub">${money(l.precio_unitario)} c/u · ${money(l.precio_unitario * l.cantidad)}</span></div><span class="paso-cant"><button type="button" data-tmenos="${l.producto_id}">−</button><span>${l.cantidad}</span><button type="button" data-tmas="${l.producto_id}" ${l.cantidad >= l.max ? 'disabled' : ''}>+</button></span><button type="button" class="ticket-linea__quitar" data-tquitar="${l.producto_id}">✕</button></div>`).join('') : '<p class="mensaje-vacio">Agrega productos.</p>';
   $('#ticketTotal').textContent = money(total);
   $('#ticketGanancia').textContent = money(total - costo);
   $('#btnGuardarVenta').disabled = S.ticket.length === 0;
@@ -314,17 +350,18 @@ function pintarTicket() {
 
 async function guardarVenta(e) {
   e.preventDefault();
-  const btn = $('#btnGuardarVenta'); const f = new FormData(e.target); const tipo = f.get('tipo');
+  const btn = $('#btnGuardarVenta'); const f = new FormData(e.target);
   btn.disabled = true; btn.textContent = 'Guardando…';
   try {
     const items = S.ticket.map(({ max, ...l }) => l);
+    const fechaPago = f.get('fecha_pago') ? new Date(f.get('fecha_pago') + 'T12:00:00').toISOString() : undefined;
     const venta = await apiVentas.crear({
       cliente_nombre: f.get('cliente_nombre').trim(), cliente_telefono: f.get('cliente_telefono').trim() || null,
-      tipo, fecha_vencimiento: tipo === 'credito' ? f.get('fecha_vencimiento') : null,
-      nota: f.get('nota').trim() || null, items, abono: tipo === 'credito' ? +f.get('abono') : undefined
+      nota: f.get('nota').trim() || null, items,
+      metodo_pago: f.get('metodo_pago'), fecha_pago: fechaPago
     });
     S.ticket = []; avisar(`Venta #${venta.folio} · ${money(venta.total)}`); await recargar();
-    ir(tipo === 'credito' ? 'cobros' : 'dashboard');
+    ir('dashboard');
   } catch (err) { avisar(err.message, 'error'); btn.disabled = false; btn.textContent = 'Guardar venta'; }
 }
 

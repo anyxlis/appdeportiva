@@ -1,31 +1,32 @@
-// ── Paleta ────────────────────────────────────────────────
-// Tema claro con profundidad. Los nombres "negro-*" se conservan
-// por compatibilidad, pero describen superficies claras.
-$negro:        #e9edf5;   // fondo de página (gris azulado, no blanco puro)
+// ── Paleta — Beland House ───────────────────────────────────
+// Tema claro y elegante a juego con el logo (negro sobre hueso).
+// Los nombres "negro-*" se conservan por compatibilidad, pero
+// describen superficies claras/cálidas.
+$negro:        #f2ede4;   // fondo de página (hueso cálido, no blanco puro)
 $negro-900:    #ffffff;   // superficie base (inputs, chips)
 $negro-800:    #ffffff;   // tarjetas y paneles
-$negro-700:    #eaeef7;   // relleno sutil / hover
-$borde:        #ccd5e4;
-$borde-suave:  #dbe1ee;
+$negro-700:    #ece5d8;   // relleno sutil / hover
+$borde:        #ddd3c2;
+$borde-suave:  #e6ded0;
 
-$tinta:        #0f1b34;   // azul noche para bloques con contraste
-$tinta-2:      #16244a;
+$tinta:        #14120f;   // negro cálido para bloques con contraste
+$tinta-2:      #201d18;
 
-$gris-claro:   #1a2436;   // texto principal
-$gris:         #4a566b;   // texto secundario
-$gris-tenue:   #7d899d;   // texto terciario / metadatos
+$gris-claro:   #1c1a16;   // texto principal
+$gris:         #524c42;   // texto secundario
+$gris-tenue:   #8a8172;   // texto terciario / metadatos
 
-$azul-hondo:   #1d4ed8;
-$azul:         #3b82f6;
-$azul-hielo:   #2563eb;   // enlaces y acentos sobre claro
+$azul-hondo:   #14120f;   // (alias histórico) ahora negro de marca
+$azul:         #2a2620;   // negro suavizado para hover/acentos
+$azul-hielo:   #14120f;   // enlaces y acentos sobre claro
 
-$ok:           #16a34a;
-$aviso:        #d97706;
-$peligro:      #e11d48;
+$ok:           #3f7a4e;
+$aviso:        #b4791f;
+$peligro:      #b23a34;
 
-// Degradado de marca (azul eléctrico)
-$metal: linear-gradient(135deg, #2563eb 0%, #3b82f6 52%, #60a5fa 100%);
-$metal-oscuro: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+// Degradado de marca (negro elegante, a juego con el logo)
+$metal: linear-gradient(135deg, #26221c 0%, #14120f 55%, #0a0908 100%);
+$metal-oscuro: linear-gradient(135deg, #14120f 0%, #0a0908 55%, #000000 100%);
 
 // ── Tipografía ────────────────────────────────────────────
 $display: 'Public Sans', system-ui, -apple-system, sans-serif;
@@ -45,6 +46,6 @@ $ease: cubic-bezier(.22, .61, .36, 1);
 $ease-out: cubic-bezier(.16, 1, .3, 1);
 
 // Sombras suaves reutilizables
-$sombra-sm: 0 2px 10px rgba(15, 27, 52, .06);
-$sombra:    0 16px 44px rgba(29, 78, 216, .12);
-$sombra-lg: 0 34px 80px rgba(15, 27, 52, .20);
+$sombra-sm: 0 2px 10px rgba(20, 18, 15, .08);
+$sombra:    0 16px 44px rgba(20, 18, 15, .14);
+$sombra-lg: 0 34px 80px rgba(20, 18, 15, .22);

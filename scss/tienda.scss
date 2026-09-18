@@ -39,16 +39,14 @@
     height: 42px;
     display: grid;
     place-items: center;
-    border-radius: $r-sm;
-    background: $tinta;
-    color: #fff;
+    color: $tinta;
     font-family: $display;
     font-weight: 800;
     font-size: 20px;
     line-height: 1;
-    overflow: hidden;
+    flex-shrink: 0;
 
-    img { width: 100%; height: 100%; object-fit: contain; padding: 5px; }
+    img { width: 100%; height: 100%; object-fit: contain; }
   }
 
   &__marca-texto { display: flex; flex-direction: column; gap: 2px; }
@@ -233,7 +231,7 @@
 
   &__brillo {
     display: block;
-    background: linear-gradient(96deg, #1d4ed8 8%, #3b82f6 46%, #22d3ee 78%);
+    background: linear-gradient(96deg, #4a4034 8%, #7a6c56 46%, #b8a586 78%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -277,80 +275,125 @@
   }
 }
 
-// La firma: tarjeta de marca sobre azul noche
-.marca-card {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
+// Vitrina del hero: productos destacados en vez de repetir el logo.
+.hero-vitrina {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 10px;
-  padding: clamp(28px, 4vw, 44px) clamp(24px, 4vw, 40px);
-  border-radius: $r-lg;
-  background: radial-gradient(120% 120% at 20% 0%, $tinta-2 0%, $tinta 55%, #0a1224 100%);
-  box-shadow: $sombra-lg;
+  gap: 14px;
 
-  &__glow {
-    position: absolute;
-    inset: -40% -10% auto -10%;
-    height: 70%;
-    background: radial-gradient(closest-side, rgba(59, 130, 246, .55), transparent 70%);
-    z-index: -1;
-    animation: flotar 7s $ease infinite alternate;
+  &__eyebrow {
+    @include etiqueta;
+    color: $gris-tenue;
+    padding: 0 2px;
   }
 
-  &__logo {
-    width: min(78%, 300px);
-    aspect-ratio: 16 / 10;
+  &__destacado {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-radius: $r;
+    background: $negro-800;
+    border: 1px solid $borde-suave;
+    box-shadow: $sombra-sm;
+    text-decoration: none;
+    transition: box-shadow .2s $ease, transform .2s $ease, border-color .2s $ease;
+
+    &:hover { box-shadow: $sombra; transform: translateY(-2px); border-color: $borde; }
+  }
+
+  &__media {
+    width: 96px;
+    height: 96px;
+    flex-shrink: 0;
+    border-radius: $r-sm;
+    overflow: hidden;
+    background: $negro-700;
     display: grid;
     place-items: center;
-    margin-bottom: 4px;
 
-    img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 12px 30px rgba(0, 0, 0, .45)); }
+    img { width: 100%; height: 100%; object-fit: cover; }
+
+    span {
+      font-family: $display;
+      font-weight: 800;
+      font-size: 32px;
+      color: $gris-tenue;
+    }
   }
 
-  &__inicial {
-    font-family: $display;
-    font-weight: 800;
-    font-size: 74px;
-    letter-spacing: .04em;
-    color: #fff;
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  &__cat {
+    font-family: $mono;
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #a08d68;
   }
 
   &__nombre {
     font-family: $display;
-    font-weight: 800;
-    font-size: clamp(22px, 3vw, 30px);
-    letter-spacing: .02em;
-    color: #fff;
+    font-weight: 700;
+    font-size: 18px;
+    color: $gris-claro;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  &__tag {
-    font-family: $mono;
-    font-size: 11px;
-    letter-spacing: .22em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, .55);
+  &__precio {
+    @include cifra;
+    font-size: 15px;
+    color: $gris-claro;
+  }
+
+  &__fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  &__mini {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border-radius: $r;
+    background: $negro-800;
+    border: 1px solid $borde-suave;
+    box-shadow: $sombra-sm;
+    text-decoration: none;
+    transition: box-shadow .2s $ease, transform .2s $ease, border-color .2s $ease;
+
+    &:hover { box-shadow: $sombra; transform: translateY(-2px); border-color: $borde; }
+
+    .hero-vitrina__media { width: 100%; height: 84px; }
+    .hero-vitrina__nombre { font-size: 13.5px; }
+    .hero-vitrina__precio { font-size: 13px; }
   }
 
   &__pie {
-    margin-top: 14px;
-    padding-top: 16px;
-    width: 100%;
-    border-top: 1px solid rgba(255, 255, 255, .12);
+    margin-top: 4px;
+    padding: 0 2px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: 12px;
     font-size: 12.5px;
-    color: rgba(255, 255, 255, .6);
+    color: $gris-tenue;
 
-    a { color: #93c5fd; font-weight: 600; &:hover { color: #bfdbfe; } }
+    a { color: $gris; font-weight: 600; text-decoration: none; &:hover { color: $gris-claro; } }
   }
 
   @media (max-width: 900px) {
-    max-width: 420px;
+    max-width: 460px;
     margin-inline: auto;
   }
 }
@@ -751,6 +794,43 @@
     flex-direction: column;
     gap: 12px;
   }
+}
+
+.carrito-vacio {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  text-align: center;
+  padding: 24px;
+
+  &__icono {
+    width: 84px;
+    height: 84px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: $negro-700;
+    color: $gris-tenue;
+  }
+
+  strong {
+    display: block;
+    font-family: $display;
+    font-weight: 700;
+    font-size: 17px;
+    color: $gris-claro;
+    margin-bottom: 6px;
+  }
+
+  p { margin: 0; font-size: 14px; line-height: 1.6; color: $gris; max-width: 26ch; }
+
+  .btn { margin-top: 4px; }
+}
+
+.cajon {
 
   &__pie {
     padding: 18px 22px 24px;
@@ -935,6 +1015,14 @@
   svg { flex-shrink: 0; }
 
   &:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(37, 211, 102, .55); }
+
+  // Se oculta mientras el cajón del carrito está abierto, para no
+  // taparle los botones de abajo.
+  .velo.abierto ~ & {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px) scale(.9);
+  }
 
   @media (max-width: 560px) {
     padding: 14px;

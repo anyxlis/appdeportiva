@@ -61,6 +61,55 @@ async function cargar() {
   pintarChips();
   pintarTiras();
   pintar();
+  pintarVitrina();
+}
+
+// ── Vitrina del hero: productos destacados ───────────────
+function pintarVitrina() {
+  const cont = $('#heroVitrina');
+  if (!cont) return;
+
+  // Prioriza productos con imagen y stock disponible; si no hay
+  // suficientes, completa con lo que haya.
+  const candidatos = [...productos].sort((a, b) => {
+    const puntos = (p) => (p.imagen_url ? 2 : 0) + (p.stock > 0 ? 1 : 0);
+    return puntos(b) - puntos(a) || new Date(b.created_at) - new Date(a.created_at);
+  });
+
+  if (!candidatos.length) {
+    cont.innerHTML = '<p class="mensaje-vacio" style="color:rgba(255,255,255,.6)">Aún no hay productos.</p>';
+    return;
+  }
+
+  const [principal, ...resto] = candidatos;
+  const secundarios = resto.slice(0, 2);
+
+  const media = (p) => p.imagen_url
+    ? `<img src="${escapar(p.imagen_url)}" alt="${escapar(p.nombre)}" loading="lazy">`
+    : `<span>${escapar(p.nombre.charAt(0).toUpperCase())}</span>`;
+
+  cont.innerHTML = `
+    <span class="hero-vitrina__eyebrow">Destacados</span>
+    <a class="hero-vitrina__destacado" href="#catalogo" data-ir-producto="${principal.id}">
+      <span class="hero-vitrina__media">${media(principal)}</span>
+      <span class="hero-vitrina__info">
+        <span class="hero-vitrina__cat">${escapar(nombreCat(principal.categoria_id))}</span>
+        <span class="hero-vitrina__nombre">${escapar(principal.nombre)}</span>
+        <span class="hero-vitrina__precio">${money(principal.precio_venta)}</span>
+      </span>
+    </a>
+    ${secundarios.length ? `<div class="hero-vitrina__fila">${secundarios.map((p) => `
+      <a class="hero-vitrina__mini" href="#catalogo" data-ir-producto="${p.id}">
+        <span class="hero-vitrina__media">${media(p)}</span>
+        <span class="hero-vitrina__info">
+          <span class="hero-vitrina__nombre">${escapar(p.nombre)}</span>
+          <span class="hero-vitrina__precio">${money(p.precio_venta)}</span>
+        </span>
+      </a>`).join('')}</div>` : ''}
+    <div class="hero-vitrina__pie">
+      <span>Montería, Córdoba</span>
+      <a href="https://instagram.com/beland.house" target="_blank" rel="noopener">@beland.house</a>
+    </div>`;
 }
 
 // ── Colecciones (tiras de categorías) ────────────────────
@@ -228,7 +277,17 @@ function pintarCarrito() {
   $('#pedirCorreo').disabled = !carrito.length;
 
   if (!carrito.length) {
-    cont.innerHTML = '<p class="mensaje-vacio">Todavía no has agregado nada.<br>Escoge productos del catálogo.</p>';
+    cont.innerHTML = `
+      <div class="carrito-vacio">
+        <span class="carrito-vacio__icono">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </span>
+        <div>
+          <strong>Tu carrito está vacío</strong>
+          <p>Explora el catálogo y agrega lo que necesites para armar tu pedido.</p>
+        </div>
+        <a class="btn btn--metal" href="#catalogo" id="irCatalogoVacio">Ver catálogo</a>
+      </div>`;
     return;
   }
 
@@ -236,7 +295,7 @@ function pintarCarrito() {
     <div class="linea">
       ${l.imagen
         ? `<img class="linea__img" src="${escapar(l.imagen)}" alt="">`
-        : `<span class="linea__img" style="display:grid;place-items:center;font-family:'Big Shoulders Display',sans-serif;font-size:22px;color:#4682b4">${escapar(l.nombre.charAt(0).toUpperCase())}</span>`}
+        : `<span class="linea__img" style="display:grid;place-items:center;font-family:'Big Shoulders Display',sans-serif;font-size:22px;color:#a08d68">${escapar(l.nombre.charAt(0).toUpperCase())}</span>`}
       <div>
         <div class="linea__nombre">${escapar(l.nombre)}</div>
         <div class="linea__precio">${money(l.precio)} c/u</div>
@@ -284,6 +343,8 @@ const cerrar = () => { $('#cajon').classList.remove('abierto'); $('#velo').class
 
 // ── Eventos ──────────────────────────────────────────────
 document.addEventListener('click', (e) => {
+  if (e.target.closest('#irCatalogoVacio')) { cerrar(); return; }
+
   const add = e.target.closest('[data-add]');
   if (add) return agregar(add.dataset.add);
 
@@ -302,6 +363,17 @@ document.addEventListener('click', (e) => {
 
   const tira = e.target.closest('[data-coleccion]');
   if (tira) return irACategoria(tira.dataset.coleccion);
+
+  const destacado = e.target.closest('[data-ir-producto]');
+  if (destacado) {
+    e.preventDefault();
+    filtro.cat = 'todas'; filtro.texto = '';
+    document.querySelectorAll('.chip').forEach((c) => c.classList.toggle('activo', c.dataset.cat === 'todas'));
+    if ($('#buscar')) $('#buscar').value = '';
+    pintar();
+    document.getElementById('catalogo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
 });
 
 $('#abrirCarrito').addEventListener('click', abrir);

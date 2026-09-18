@@ -5,7 +5,8 @@ export const NEGOCIO = {
   nombre: 'BELAND',
   sufijo: 'HOUSE',
   inicial: 'B',
-  logo: 'img/logo.png',
+  logo: 'img/logo-icono.png',
+  sello: 'img/logo.png',
   tagline: 'Sports & Supplements',
   whatsapp: '573147970243',
   instagram: 'beland.house',
@@ -101,6 +102,16 @@ export const productos = {
     });
     lanzar(error);
     return data;
+  },
+  async subirImagen(archivo) {
+    const ext = (archivo.name.split('.').pop() || 'jpg').toLowerCase();
+    const ruta = `productos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage.from('productos').upload(ruta, archivo, {
+      cacheControl: '3600', upsert: false
+    });
+    lanzar(error);
+    const { data } = supabase.storage.from('productos').getPublicUrl(ruta);
+    return data.publicUrl;
   }
 };
 
@@ -116,15 +127,17 @@ export const ventas = {
     lanzar(error);
     return data;
   },
-  async crear({ cliente_nombre, cliente_telefono, tipo, fecha_vencimiento, nota, items, abono }) {
+  async crear({ cliente_nombre, cliente_telefono, nota, items, metodo_pago, fecha_pago }) {
     const { data, error } = await supabase.rpc('registrar_venta', {
       p_cliente_nombre: cliente_nombre,
       p_cliente_telefono: cliente_telefono || null,
-      p_tipo: tipo || 'contado',
-      p_fecha_vencimiento: fecha_vencimiento || null,
+      p_tipo: 'contado',
+      p_fecha_vencimiento: null,
       p_nota: nota || null,
       p_items: items,
-      p_abono: abono ?? null
+      p_abono: null,
+      p_metodo_pago: metodo_pago || 'efectivo',
+      p_fecha_pago: fecha_pago || undefined
     });
     lanzar(error);
     return data;

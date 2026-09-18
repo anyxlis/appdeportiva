@@ -8,29 +8,48 @@
   place-items: center;
   padding: 24px;
   position: relative;
+  overflow: hidden;
   z-index: 1;
+
+  &__glow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(620px 420px at 50% -8%, rgba(184, 165, 134, .22), transparent 70%),
+      radial-gradient(520px 380px at 100% 100%, rgba(20, 18, 15, .05), transparent 70%);
+  }
 
   &__caja {
     @include panel($r-lg);
     width: min(400px, 100%);
-    padding: 34px 30px;
+    padding: 40px 34px 34px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
     animation: subir .5s $ease-out;
   }
 
   &__logo {
-    width: 52px; height: 52px;
+    width: 108px; height: 108px;
     display: grid; place-items: center;
-    @include metal($r-sm);
+    border-radius: 50%;
+    overflow: hidden;
     font-family: $display;
-    font-size: 28px;
-    margin-bottom: 20px;
-    padding-top: 3px;
+    font-weight: 800;
+    font-size: 40px;
+    color: #fff;
+    background: $tinta;
+    margin-bottom: 22px;
+    box-shadow: 0 16px 36px rgba(20, 18, 15, .28);
   }
 
-  h1 { font-size: 34px; margin-bottom: 6px; }
-  p { color: $gris-tenue; font-size: 13.5px; margin: 0 0 24px; }
+  h1 { font-size: 30px; margin-bottom: 6px; }
+  p { color: $gris-tenue; font-size: 13.5px; margin: 0 0 26px; }
 
-  form { display: flex; flex-direction: column; gap: 14px; }
+  form { width: 100%; display: flex; flex-direction: column; gap: 14px; text-align: left; }
 }
 
 .error-msg {
@@ -429,13 +448,31 @@
 .ticket-linea {
   display: grid;
   grid-template-columns: 1fr auto auto;
-  gap: 9px;
+  gap: 12px;
   align-items: center;
   font-size: 13px;
+  padding: 9px 0;
+  border-bottom: 1px solid $borde-suave;
   animation: subir .25s $ease-out;
 
-  &__nombre { line-height: 1.25; }
-  &__sub { @include cifra; color: $azul-hielo; font-size: 12px; }
+  &:last-child { border-bottom: none; }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__nombre {
+    font-weight: 600;
+    color: $gris-claro;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__sub { @include cifra; color: $gris-tenue; font-size: 11.5px; }
   &__quitar {
     @include foco;
     width: 24px; height: 24px;

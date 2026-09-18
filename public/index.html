@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BELAND HOUSE — Sports &amp; Supplements</title>
 <meta name="description" content="Creatina, proteína, ropa deportiva y accesorios de gimnasio. Pedidos por WhatsApp.">
-<link rel="icon" href="img/logo.png">
+<link rel="icon" href="img/logo-icono.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -85,19 +85,9 @@
       </div>
     </div>
 
-    <!-- Firma visual: la marca -->
-    <div class="marca-card">
-      <div class="marca-card__glow"></div>
-      <div class="marca-card__logo">
-        <img id="heroLogo" src="img/logo.png" alt="BELAND HOUSE" onerror="this.style.display='none';this.nextElementSibling.hidden=false">
-        <span class="marca-card__inicial" hidden>BH</span>
-      </div>
-      <span class="marca-card__nombre">BELAND HOUSE</span>
-      <span class="marca-card__tag">Sports &amp; Supplements</span>
-      <div class="marca-card__pie">
-        <span>Montería, Córdoba</span>
-        <a href="https://instagram.com/beland.house" target="_blank" rel="noopener">@beland.house</a>
-      </div>
+    <!-- Vitrina: productos destacados -->
+    <div class="hero-vitrina" id="heroVitrina">
+      <p class="mensaje-vacio">Cargando destacados…</p>
     </div>
   </div>
 </section>
@@ -213,7 +203,10 @@
       <span>Total</span>
       <strong id="totalCarrito">$ 0</strong>
     </div>
-    <button class="btn btn--metal btn--ancho" id="pedirWhats" disabled>Pedir por WhatsApp</button>
+    <button class="btn btn--whats btn--ancho" id="pedirWhats" disabled>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm5.8 14.09c-.24.68-1.39 1.3-1.92 1.35-.49.05-1.06.24-3.53-.74-2.97-1.18-4.87-4.2-5.02-4.4-.15-.19-1.2-1.6-1.2-3.05 0-1.46.76-2.17 1.03-2.47.27-.29.6-.37.8-.37.2 0 .4 0 .58.01.19.01.44-.07.68.53.25.6.85 2.09.92 2.24.07.15.12.32.02.51-.1.19-.15.31-.3.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.76 1.26 1.64 2.04 1.13 1 2.08 1.32 2.37 1.47.29.15.46.13.63-.06.17-.19.72-.84.91-1.13.19-.29.38-.24.63-.15.25.1 1.62.77 1.9.91.28.14.47.21.53.33.07.12.07.68-.17 1.36Z"/></svg>
+      Pedir por WhatsApp
+    </button>
     <button class="btn btn--fantasma btn--ancho" id="pedirCorreo" disabled>Enviar por correo</button>
   </div>
 </aside>
