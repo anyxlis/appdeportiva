@@ -1,4 +1,4 @@
-import { api, NEGOCIO, money, escapar } from './config.js';
+import { catalogo, NEGOCIO, money, escapar } from './config.js';
 
 const $ = (s) => document.querySelector(s);
 const rejilla = $('#rejilla');
@@ -44,11 +44,11 @@ async function cargar() {
   let cat, prod;
   try {
     [cat, prod] = await Promise.all([
-      api('/catalogo/categorias'),
-      api('/catalogo')
+      catalogo.categorias(),
+      catalogo.productos()
     ]);
   } catch (err) {
-    estado.innerHTML = `<div class="vacio"><h3>No cargó el catálogo</h3><p>¿Está corriendo el servidor? Ejecuta <code>npm run dev</code> y revisa la base de datos.<br><span class="cifra" style="font-size:12px">${escapar(err.message)}</span></p></div>`;
+    estado.innerHTML = `<div class="vacio"><h3>No cargó el catálogo</h3><p>Revisa la conexión con Supabase.<br><span class="cifra" style="font-size:12px">${escapar(err.message)}</span></p></div>`;
     return;
   }
 
@@ -330,7 +330,4 @@ window.addEventListener('scroll', () => {
 // Al volver a la pestaña, refresca stock por si la dueña vendió algo
 window.addEventListener('focus', () => { if (productos.length) cargar(); });
 
-pintarMarca();
-restaurar();
-pintarCarrito();
-cargar();
+pintarMarca(); restaurar(); pintarCarrito(); cargar();

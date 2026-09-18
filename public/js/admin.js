@@ -1,4 +1,4 @@
-import { api, NEGOCIO, money, fecha, fechaCorta, hoyISO, escapar } from './config.js';
+import { auth, productos as apiProductos, ventas as apiVentas, cobros as apiCobros, informes as apiInformes, NEGOCIO, money, fecha, fechaCorta, hoyISO, escapar } from './config.js';
 
 const $ = (s) => document.querySelector(s);
 const contenido = $('#contenido');
@@ -42,12 +42,8 @@ $('#formAcceso').addEventListener('submit', async (e) => {
   $('#errorAcceso').textContent = '';
 
   try {
-    const data = await api('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email: $('#correo').value.trim(), password: $('#clave').value })
-    });
-    localStorage.setItem('token', data.token);
-    iniciar();
+    await auth.login($('#correo').value.trim(), $('#clave').value);
+    await iniciar();
   } catch (err) {
     $('#errorAcceso').textContent = err.message;
   } finally {
@@ -55,26 +51,17 @@ $('#formAcceso').addEventListener('submit', async (e) => {
   }
 });
 
-$('#btnSalir').addEventListener('click', () => { localStorage.removeItem('token'); location.reload(); });
+$('#btnSalir').addEventListener('click', async () => { await auth.logout(); location.reload(); });
 
 async function iniciar() {
-  const token = localStorage.getItem('token');
-  if (!token) {
+  const me = await auth.me().catch(() => null);
+  if (!me) {
     $('#pantallaAcceso').classList.remove('oculto');
     $('#app').classList.add('oculto');
     return;
   }
 
-  try {
-    const me = await api('/auth/me');
-    $('#correoActivo').textContent = me.email;
-  } catch {
-    localStorage.removeItem('token');
-    $('#pantallaAcceso').classList.remove('oculto');
-    $('#app').classList.add('oculto');
-    return;
-  }
-
+  $('#correoActivo').textContent = me.email;
   $('#pantallaAcceso').classList.add('oculto');
   $('#app').classList.remove('oculto');
   await recargar();
@@ -85,11 +72,11 @@ async function iniciar() {
 async function recargar() {
   try {
     const [prod, cat, cob, hoy, ult] = await Promise.all([
-      api('/productos'),
-      api('/informes/categorias'),
-      api('/cobros'),
-      api(`/ventas?desde=${inicioDia()}&limite=200`),
-      api('/ventas?limite=8')
+      apiProductos.listar(),
+      apiInformes.categorias(),
+      apiCobros.listar(),
+      apiVentas.listar({ desde: inicioDia(), limite: 200 }),
+      apiVentas.listar({ limite: 8 })
     ]);
 
     S.productos = prod;
@@ -228,14 +215,15 @@ function modalProducto(p = null) {
     const f = new FormData(form);
     const datos = { nombre: f.get('nombre').trim(), marca: f.get('marca').trim() || null, categoria_id: f.get('categoria_id') || null, precio_fabrica: +f.get('precio_fabrica'), precio_venta: +f.get('precio_venta'), stock: +f.get('stock'), stock_minimo: +f.get('stock_minimo'), imagen_url: f.get('imagen_url').trim() || null, descripcion: f.get('descripcion').trim() || null, activo: f.get('activo') === 'on' };
     try {
-      await api(esNuevo ? '/productos' : `/productos/${p.id}`, { method: esNuevo ? 'POST' : 'PUT', body: JSON.stringify(datos) });
+      if (esNuevo) await apiProductos.crear(datos);
+      else await apiProductos.actualizar(p.id, datos);
       cerrarModal(); avisar(esNuevo ? 'Producto creado' : 'Cambios guardados'); await recargar(); ir('productos');
     } catch (err) { avisar(err.message, 'error'); }
   });
 
   $('#modal').querySelector('[data-borrar]')?.addEventListener('click', async () => {
     if (!confirm(`¿Eliminar "${p.nombre}"?`)) return;
-    try { await api(`/productos/${p.id}`, { method: 'DELETE' }); cerrarModal(); avisar('Eliminado'); await recargar(); ir('productos'); }
+    try { await apiProductos.eliminar(p.id); cerrarModal(); avisar('Eliminado'); await recargar(); ir('productos'); }
     catch (err) { avisar(err.message, 'error'); }
   });
 }
@@ -255,7 +243,7 @@ function modalStock(p) {
     e.preventDefault();
     const f = new FormData(e.target);
     try {
-      await api(`/productos/${p.id}/stock`, { method: 'POST', body: JSON.stringify({ cantidad: +f.get('cantidad'), costo: f.get('costo') !== '' ? +f.get('costo') : undefined, motivo: f.get('motivo') }) });
+      await apiProductos.ajustarStock(p.id, { cantidad: +f.get('cantidad'), costo: f.get('costo') !== '' ? +f.get('costo') : undefined, motivo: f.get('motivo') });
       cerrarModal(); avisar('Inventario actualizado'); await recargar(); ir('productos');
     } catch (err) { avisar(err.message, 'error'); }
   });
@@ -330,11 +318,11 @@ async function guardarVenta(e) {
   btn.disabled = true; btn.textContent = 'Guardando…';
   try {
     const items = S.ticket.map(({ max, ...l }) => l);
-    const venta = await api('/ventas', { method: 'POST', body: JSON.stringify({
+    const venta = await apiVentas.crear({
       cliente_nombre: f.get('cliente_nombre').trim(), cliente_telefono: f.get('cliente_telefono').trim() || null,
       tipo, fecha_vencimiento: tipo === 'credito' ? f.get('fecha_vencimiento') : null,
       nota: f.get('nota').trim() || null, items, abono: tipo === 'credito' ? +f.get('abono') : undefined
-    })});
+    });
     S.ticket = []; avisar(`Venta #${venta.folio} · ${money(venta.total)}`); await recargar();
     ir(tipo === 'credito' ? 'cobros' : 'dashboard');
   } catch (err) { avisar(err.message, 'error'); btn.disabled = false; btn.textContent = 'Guardar venta'; }
@@ -362,7 +350,7 @@ function vCobros() {
 
 async function modalAbono(c) {
   let previos = [];
-  try { previos = await api(`/cobros/${c.id}/abonos`); } catch {}
+  try { previos = await apiCobros.abonosDe(c.id); } catch {}
 
   abrirModal(`
     <div class="modal__cabeza"><h2>Registrar abono</h2><button class="modal__cerrar" data-cerrar>✕</button></div>
@@ -379,7 +367,7 @@ async function modalAbono(c) {
     e.preventDefault();
     const f = new FormData(e.target);
     try {
-      await api(`/cobros/${c.id}/abonos`, { method: 'POST', body: JSON.stringify({ monto: Math.min(+f.get('monto'), Number(c.saldo)), metodo: f.get('metodo'), nota: f.get('nota').trim() || null }) });
+      await apiCobros.abonar(c.id, { monto: Math.min(+f.get('monto'), Number(c.saldo)), metodo: f.get('metodo'), nota: f.get('nota').trim() || null });
       cerrarModal(); avisar(+f.get('monto') >= c.saldo ? 'Cuenta saldada' : 'Abono registrado'); await recargar(); ir('cobros');
     } catch (err) { avisar(err.message, 'error'); }
   });
@@ -419,20 +407,20 @@ async function calcularInforme() {
 
   try {
     const [dias, top] = await Promise.all([
-      api(`/informes/rango?desde=${desde}&hasta=${hasta}`),
-      api(`/informes/top?desde=${desde}&hasta=${hasta}&limite=8`)
+      apiInformes.rango(desde, hasta),
+      apiInformes.top(desde, hasta, 8)
     ]);
 
     const ingresos = sumar(dias, 'ingresos'), costos = sumar(dias, 'costos'), ganancia = sumar(dias, 'ganancia');
-    const ventas = dias.reduce((s, d) => s + Number(d.ventas_count), 0);
+    const ventasCount = dias.reduce((s, d) => s + Number(d.ventas_count), 0);
     const maximo = Math.max(...dias.map((d) => Number(d.ingresos)), 1);
 
     caja.innerHTML = `
       <div class="kpis">
-        <div class="kpi"><span class="kpi__label">Ingresos</span><span class="kpi__valor">${money(ingresos)}</span><p class="kpi__nota">${ventas} venta(s)</p></div>
+        <div class="kpi"><span class="kpi__label">Ingresos</span><span class="kpi__valor">${money(ingresos)}</span><p class="kpi__nota">${ventasCount} venta(s)</p></div>
         <div class="kpi"><span class="kpi__label">Costo</span><span class="kpi__valor">${money(costos)}</span></div>
         <div class="kpi kpi--ok"><span class="kpi__label">Ganancia</span><span class="kpi__valor">${money(ganancia)}</span><p class="kpi__nota">${ingresos ? Math.round((ganancia / ingresos) * 100) : 0}% margen</p></div>
-        <div class="kpi"><span class="kpi__label">Ticket promedio</span><span class="kpi__valor">${money(ventas ? ingresos / ventas : 0)}</span></div>
+        <div class="kpi"><span class="kpi__label">Ticket promedio</span><span class="kpi__valor">${money(ventasCount ? ingresos / ventasCount : 0)}</span></div>
       </div>
       <div class="doble">
         <section class="bloque"><div class="bloque__cabeza"><h2>Ingresos por día</h2></div>

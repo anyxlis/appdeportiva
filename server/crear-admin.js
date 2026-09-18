@@ -1,6 +1,6 @@
 // Uso: node server/crear-admin.js correo@ejemplo.com contraseña "Nombre"
 require('dotenv').config();
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const db = require('./db');
 
 async function main() {
