@@ -850,3 +850,430 @@
   svg { width: 14px; height: 14px; }
   &:hover { background: $negro-700; border-color: $azul-hondo; }
 }
+
+// ════════════════════════════════════════════════════════════
+//  Responsive — tabletas y celulares
+// ════════════════════════════════════════════════════════════
+
+// ── Navegación: barra superior pegajosa ─────────────────────
+@media (max-width: 900px) {
+  .lateral {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    gap: 6px;
+    background: $negro-900;
+    border-right: none;
+    border-bottom: 1px solid $borde-suave;
+    box-shadow: 0 2px 10px rgba(20, 18, 15, .06);
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar { display: none; }
+    &__pie .btn { white-space: nowrap; }
+  }
+
+  .tab {
+    padding: 9px 13px;
+    font-size: 13px;
+    flex: none;
+  }
+}
+
+// ── Celular ─────────────────────────────────────────────────
+@media (max-width: 680px) {
+  .panel-main { padding: 16px 14px 28px; }
+
+  .cabecera {
+    margin-bottom: 18px;
+    h1 { font-size: 27px; }
+    &__sub { font-size: 12.5px; }
+    &__acciones { width: 100%; .btn { flex: 1; } }
+  }
+
+  // Dos indicadores por fila en vez de uno
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .kpi {
+    padding: 13px 13px;
+
+    &__label { font-size: 9.5px; }
+    &__valor { font-size: 21px; }
+    &__nota  { font-size: 11px; }
+  }
+
+  .bloque {
+    padding: 14px;
+    margin-bottom: 14px;
+
+    &__cabeza h2 { font-size: 19px; }
+  }
+
+  // Evitar el zoom automático de iOS al enfocar un campo
+  .input, .select, .textarea { font-size: 16px; }
+
+  // Tablas normales: se deslizan a lo ancho
+  .tabla {
+    font-size: 12.5px;
+    th, td { padding: 8px 9px; }
+  }
+
+  .tabla-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  // Modal a pantalla completa
+  .modal-velo { padding: 0; place-items: end stretch; }
+
+  .modal {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: $r-lg $r-lg 0 0;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+
+    &__cabeza h2 { font-size: 22px; }
+    &__pie { flex-direction: column-reverse; .btn { width: 100%; } }
+  }
+
+  // ── Factura: la tabla de detalle pasa a tarjetas ──────────
+  .factura {
+    gap: 12px;
+
+    .bloque { padding: 14px; }
+    .campo > span { font-size: 12.5px; }
+  }
+
+  .rejilla-doc { gap: 11px; }
+
+  .tabla-detalle {
+    display: block;
+
+    thead { display: none; }
+    tbody, tfoot { display: block; }
+
+    tr {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      margin-bottom: 10px;
+      border: 1px solid $borde-suave;
+      border-radius: $r-sm;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    td {
+      display: block;
+      border: none;
+      border-top: 1px solid $borde-suave;
+      padding: 9px 11px;
+
+      // Etiqueta de la columna, tomada de data-rotulo
+      &::before {
+        content: attr(data-rotulo);
+        display: block;
+        font-size: 10.5px;
+        color: $gris-tenue;
+        margin-bottom: 3px;
+      }
+
+      &.col-i,
+      &[data-rotulo='Producto'] {
+        grid-column: 1 / -1;
+        border-top: none;
+      }
+    }
+
+    // El número de línea va junto al nombre, no en su propia caja
+    .col-i {
+      display: none;
+    }
+
+    .celda { padding: 0; }
+
+    .input, .select { padding: 4px 0; font-size: 15px; }
+    .num .input { text-align: left; }
+
+    .col-x {
+      grid-column: 1 / -1;
+      text-align: right;
+      &::before { display: none; }
+    }
+
+    .quitar { margin: 0 0 0 auto; }
+
+    tr.vacio {
+      display: block;
+      td { display: block; padding: 22px 12px; &::before { display: none; } }
+    }
+
+    tfoot tr {
+      grid-template-columns: 1fr;
+      background: $negro-700;
+    }
+    tfoot td {
+      text-align: left !important;
+      &::before { display: none; }
+    }
+  }
+
+  .barra-doc {
+    gap: 8px;
+    .btn { flex: 1 1 100%; }
+  }
+
+  // Gráfico de informes
+  .grafico { overflow-x: auto; }
+}
+
+// ── Pantallas muy angostas ──────────────────────────────────
+@media (max-width: 380px) {
+  .kpis { grid-template-columns: 1fr; }
+  .cabecera h1 { font-size: 24px; }
+}
+
+// ════════════════════════════════════════════════════════════
+//  Inventario en tarjetas
+// ════════════════════════════════════════════════════════════
+.inv-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  &__buscar { flex: 1 1 220px; max-width: 340px; }
+}
+
+.inv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chip-filtro {
+  @include foco;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid $borde;
+  background: #fff;
+  color: $gris;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .18s $ease;
+
+  &:hover { border-color: $azul-hondo; }
+
+  &.activo {
+    background: $tinta;
+    border-color: $tinta;
+    color: #fff;
+  }
+
+  .punto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+}
+
+.punto--ok      { background: $ok; }
+.punto--aviso   { background: $aviso; }
+.punto--peligro { background: $peligro; }
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 14px;
+}
+
+.inv-card {
+  @include panel($r);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .2s $ease, border-color .2s, box-shadow .2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: $borde;
+    box-shadow: 0 10px 24px rgba(20, 18, 15, .1);
+  }
+
+  &--bajo    { border-color: rgba(180, 121, 31, .45); }
+  &--agotado { border-color: rgba(178, 58, 52, .4); }
+
+  // ── Foto ──────────────────────────────────────────────
+  &__foto {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: $negro-700;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  &__sinfoto {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    font-family: $display;
+    font-size: 34px;
+    color: $borde;
+    background: linear-gradient(135deg, #f6f1e8, #ece5d8);
+  }
+
+  &__cat {
+    position: absolute;
+    top: 9px; left: 9px;
+    width: 24px; height: 24px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: rgba(20, 18, 15, .78);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    backdrop-filter: blur(3px);
+  }
+
+  &__stock {
+    @include cifra;
+    position: absolute;
+    top: 9px; right: 9px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .92);
+    border: 1px solid $borde-suave;
+    font-size: 11px;
+    font-weight: 600;
+    color: $gris-claro;
+    backdrop-filter: blur(3px);
+
+    &--bajo    { color: $aviso;  border-color: rgba(180, 121, 31, .4); }
+    &--agotado { color: $peligro; border-color: rgba(178, 58, 52, .4); }
+  }
+
+  &__oculto {
+    position: absolute;
+    bottom: 9px; left: 9px;
+    @include etiqueta;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(20, 18, 15, .78);
+    color: #fff;
+  }
+
+  // ── Cuerpo ────────────────────────────────────────────
+  &__cuerpo {
+    padding: 12px 13px 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__nombre {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: $gris-claro;
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: .01em;
+  }
+
+  &__marca {
+    @include etiqueta;
+    font-size: 9.5px;
+    margin-top: 2px;
+    display: block;
+  }
+
+  &__linea {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  &__precio { @include cifra; font-size: 15px; font-weight: 700; color: $gris-claro; }
+
+  &__estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    color: $gris-tenue;
+
+    .punto { width: 7px; height: 7px; border-radius: 50%; }
+  }
+
+  &__acciones {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    margin-top: 12px;
+    background: $borde-suave;
+    border-top: 1px solid $borde-suave;
+
+    button {
+      @include foco;
+      padding: 9px 4px;
+      border: none;
+      background: #fff;
+      color: $gris;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+
+      &:hover { background: $negro-700; color: $gris-claro; }
+      &.peligro:hover { background: rgba(178, 58, 52, .1); color: $peligro; }
+    }
+  }
+}
+
+// Barra de nivel de stock
+.nivel {
+  height: 4px;
+  border-radius: 99px;
+  background: $borde-suave;
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: $ok;
+    transition: width .3s $ease;
+  }
+
+  &--bajo span    { background: $aviso; }
+  &--agotado span { background: $peligro; }
+}
+
+@media (max-width: 680px) {
+  .inv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .inv-card {
+    &__cuerpo { padding: 10px 10px 0; }
+    &__nombre { font-size: 12.5px; }
+    &__precio { font-size: 13.5px; }
+    &__acciones button { font-size: 11px; padding: 9px 2px; }
+  }
+  .inv-barra__buscar { max-width: none; flex: 1 1 100%; }
+}
+
+@media (max-width: 380px) {
+  .inv-grid { grid-template-columns: 1fr; }
+}

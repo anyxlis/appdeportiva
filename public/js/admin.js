@@ -171,35 +171,100 @@ function vDashboard() {
 }
 
 // ═══ Vista: inventario ═══════════════════════════════════
+const estadoProd = (p) => p.stock === 0 ? 'agotado' : p.stock <= p.stock_minimo ? 'bajo' : 'ok';
+
 function vProductos() {
   const catNombre = (id) => S.categorias.find((c) => c.id === id)?.nombre || '—';
+  const cuenta = (e) => S.productos.filter((p) => estadoProd(p) === e).length;
 
   contenido.innerHTML = `
     <div class="vista">
       <div class="cabecera">
         <div><h1>Inventario</h1><p class="cabecera__sub">${S.productos.length} productos · ${S.stockBajo.length} en alerta</p></div>
         <div class="cabecera__acciones">
-          <input class="input" id="filtroProd" placeholder="Buscar…" style="width:200px">
-          <button class="btn btn--metal" id="nuevoProd">Nuevo producto</button>
+          <button class="btn btn--metal" id="nuevoProd">+ Producto</button>
         </div>
       </div>
-      <section class="bloque"><div class="tabla-wrap"><table class="tabla"><thead><tr><th>Producto</th><th>Categoría</th><th class="num">Costo</th><th class="num">Venta</th><th class="num">Margen</th><th class="num">Stock</th><th></th></tr></thead><tbody id="filasProd"></tbody></table></div></section>
+
+      <div class="inv-barra">
+        <input class="input inv-barra__buscar" id="filtroProd" placeholder="Buscar producto, marca o categoría…">
+        <div class="inv-chips" id="chipsProd">
+          <button type="button" class="chip-filtro activo" data-estado="todos">Todos ${S.productos.length}</button>
+          <button type="button" class="chip-filtro" data-estado="ok"><span class="punto punto--ok"></span> Disponibles ${cuenta('ok')}</button>
+          <button type="button" class="chip-filtro" data-estado="bajo"><span class="punto punto--aviso"></span> Poco ${cuenta('bajo')}</button>
+          <button type="button" class="chip-filtro" data-estado="agotado"><span class="punto punto--peligro"></span> Agotados ${cuenta('agotado')}</button>
+        </div>
+      </div>
+
+      <div class="inv-grid" id="gridProd"></div>
     </div>`;
 
-  const pintar = (texto = '') => {
-    const t = texto.toLowerCase();
-    const lista = S.productos.filter((p) => `${p.nombre} ${p.marca || ''} ${catNombre(p.categoria_id)}`.toLowerCase().includes(t));
-    $('#filasProd').innerHTML = lista.length ? lista.map((p) => {
-      const margen = p.precio_venta > 0 ? Math.round(((p.precio_venta - p.precio_fabrica) / p.precio_venta) * 100) : 0;
-      const ratio = Math.min(100, p.stock_minimo ? (p.stock / (p.stock_minimo * 2)) * 100 : 100);
-      const nivel = p.stock === 0 ? 'medidor--nulo' : p.stock <= p.stock_minimo ? 'medidor--bajo' : '';
-      return `<tr class="${p.stock === 0 ? 'fila-agotada' : p.stock <= p.stock_minimo ? 'fila-alerta' : ''}"><td class="nombre-prod">${escapar(p.nombre)}<span class="sub">${escapar(p.marca || 'Sin marca')}${p.activo ? '' : ' · oculto'}</span></td><td>${escapar(catNombre(p.categoria_id))}</td><td class="num">${money(p.precio_fabrica)}</td><td class="num">${money(p.precio_venta)}</td><td class="num" style="color:${margen >= 25 ? '#46b58a' : margen > 0 ? '#dda94f' : '#d95d54'}">${margen}%</td><td class="num"><div style="display:flex;align-items:center;gap:8px;justify-content:flex-end"><span>${p.stock}</span><span class="medidor ${nivel}"><span class="medidor__relleno" style="width:${ratio}%"></span></span></div></td><td><div class="acciones"><button class="btn btn--sm btn--fantasma" data-stock="${p.id}">Stock</button><button class="btn btn--sm" data-editar="${p.id}">Editar</button></div></td></tr>`;
-    }).join('') : '<tr><td colspan="7"><p class="mensaje-vacio">Sin productos.</p></td></tr>';
+  let estadoActivo = 'todos';
+
+  const pintar = () => {
+    const t = ($('#filtroProd').value || '').toLowerCase();
+    const lista = S.productos
+      .filter((p) => `${p.nombre} ${p.marca || ''} ${catNombre(p.categoria_id)}`.toLowerCase().includes(t))
+      .filter((p) => estadoActivo === 'todos' || estadoProd(p) === estadoActivo)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+
+    $('#gridProd').innerHTML = lista.length ? lista.map((p) => {
+      const est = estadoProd(p);
+      const meta = Math.max(p.stock, (p.stock_minimo || 1) * 3);
+      const ratio = Math.round((p.stock / meta) * 100);
+      const rotulo = { ok: 'Disponible', bajo: 'Poco', agotado: 'Agotado' }[est];
+      const color = { ok: 'ok', bajo: 'aviso', agotado: 'peligro' }[est];
+      const cat = catNombre(p.categoria_id);
+
+      return `<article class="inv-card ${est === 'bajo' ? 'inv-card--bajo' : est === 'agotado' ? 'inv-card--agotado' : ''}">
+        <div class="inv-card__foto">
+          ${p.imagen_url
+            ? `<img src="${escapar(p.imagen_url)}" alt="${escapar(p.nombre)}" loading="lazy">`
+            : `<div class="inv-card__sinfoto">${escapar((p.nombre || '?').charAt(0).toUpperCase())}</div>`}
+          <span class="inv-card__cat" title="${escapar(cat)}">${escapar(cat.charAt(0).toUpperCase())}</span>
+          <span class="inv-card__stock ${est === 'bajo' ? 'inv-card__stock--bajo' : est === 'agotado' ? 'inv-card__stock--agotado' : ''}">${p.stock}/${meta} und</span>
+          ${p.activo ? '' : '<span class="inv-card__oculto">Oculto</span>'}
+        </div>
+
+        <div class="inv-card__cuerpo">
+          <div>
+            <div class="inv-card__nombre">${escapar(p.nombre)}</div>
+            <span class="inv-card__marca">${escapar(p.marca || 'Sin marca')}</span>
+          </div>
+          <div class="inv-card__linea">
+            <span class="inv-card__precio">${money(p.precio_venta)}</span>
+            <span class="inv-card__estado"><span class="punto punto--${color}"></span>${rotulo}</span>
+          </div>
+          <div class="nivel ${est === 'bajo' ? 'nivel--bajo' : est === 'agotado' ? 'nivel--agotado' : ''}"><span style="width:${ratio}%"></span></div>
+        </div>
+
+        <div class="inv-card__acciones">
+          <button type="button" data-editar="${p.id}">Editar</button>
+          <button type="button" data-stock="${p.id}">Stock</button>
+          <button type="button" class="peligro" data-borrarprod="${p.id}">Eliminar</button>
+        </div>
+      </article>`;
+    }).join('') : '<p class="mensaje-vacio" style="grid-column:1/-1">Sin productos que coincidan.</p>';
   };
 
   pintar();
-  $('#filtroProd').addEventListener('input', (e) => pintar(e.target.value));
+  $('#filtroProd').addEventListener('input', pintar);
+  $('#chipsProd').addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-estado]'); if (!chip) return;
+    estadoActivo = chip.dataset.estado;
+    $('#chipsProd').querySelectorAll('.chip-filtro').forEach((c) => c.classList.toggle('activo', c === chip));
+    pintar();
+  });
   $('#nuevoProd').addEventListener('click', () => modalProducto());
+}
+
+async function borrarProducto(p) {
+  if (!p || !confirm(`¿Eliminar "${p.nombre}" del inventario?`)) return;
+  try {
+    await apiProductos.eliminar(p.id);
+    avisar('Producto eliminado');
+    await recargar(); ir('productos');
+  } catch (err) { avisar(err.message, 'error'); }
 }
 
 function modalProducto(p = null) {
@@ -484,10 +549,10 @@ function pintarLineas() {
       </tr></thead>
       <tbody>${S.ticket.length ? S.ticket.map((l, i) => `<tr>
         <td class="col-i"><div class="celda col-i">${i + 1}</div></td>
-        <td><select class="select" data-prod="${i}"><option value="">— Selecciona —</option>${opcionesProducto(l.producto_id, i)}</select></td>
-        <td class="num"><input class="input" type="number" min="1" step="1" value="${l.cantidad}" data-cant="${i}"></td>
-        <td class="num"><input class="input" type="number" min="0" step="1" value="${l.precio_unitario}" data-vr="${i}"></td>
-        <td class="num"><div class="celda" style="text-align:right;font-weight:600">${money(l.precio_unitario * l.cantidad)}</div></td>
+        <td data-rotulo="Producto"><select class="select" data-prod="${i}"><option value="">— Selecciona —</option>${opcionesProducto(l.producto_id, i)}</select></td>
+        <td class="num" data-rotulo="Cantidad"><input class="input" type="number" min="1" step="1" value="${l.cantidad}" data-cant="${i}"></td>
+        <td class="num" data-rotulo="Valor unitario"><input class="input" type="number" min="0" step="1" value="${l.precio_unitario}" data-vr="${i}"></td>
+        <td class="num" data-rotulo="Valor total"><div class="celda" style="text-align:right;font-weight:600">${money(l.precio_unitario * l.cantidad)}</div></td>
         <td class="col-x"><button type="button" class="quitar" data-tquitar="${i}" title="Quitar">${ICO.x}</button></td>
       </tr>`).join('') : '<tr class="vacio"><td colspan="6">Sin líneas todavía. Usa «Agregar línea».</td></tr>'}</tbody>
       ${S.ticket.length ? `<tfoot><tr><td colspan="4" style="text-align:right">Total factura</td><td style="text-align:right">${money(total)}</td><td></td></tr></tfoot>` : ''}
@@ -695,6 +760,7 @@ document.addEventListener('click', (e) => {
   const irA = t.closest('[data-ir]'); if (irA) return ir(irA.dataset.ir);
   const editar = t.closest('[data-editar]'); if (editar) return modalProducto(S.productos.find((p) => p.id === editar.dataset.editar));
   const stock = t.closest('[data-stock]'); if (stock) return modalStock(S.productos.find((p) => p.id === stock.dataset.stock));
+  const borrarP = t.closest('[data-borrarprod]'); if (borrarP) return borrarProducto(S.productos.find((p) => p.id === borrarP.dataset.borrarprod));
   const sumar_ = t.closest('[data-sumar]'); if (sumar_) return sumarAlTicket(sumar_.dataset.sumar);
   const abonar = t.closest('[data-abonar]'); if (abonar) return modalAbono(S.cobros.find((c) => c.id === abonar.dataset.abonar));
   const recordar = t.closest('[data-recordar]'); if (recordar) return recordarPorWhats(S.cobros.find((c) => c.id === recordar.dataset.recordar));
