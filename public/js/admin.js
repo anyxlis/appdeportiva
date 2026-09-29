@@ -1,9 +1,9 @@
-import { auth, productos as apiProductos, ventas as apiVentas, cobros as apiCobros, informes as apiInformes, NEGOCIO, money, fecha, fechaCorta, hoyISO, escapar } from './config.js';
+import { auth, productos as apiProductos, ventas as apiVentas, cobros as apiCobros, informes as apiInformes, resumen as apiResumen, documentos as apiDocumentos, NEGOCIO, money, fecha, fechaCorta, hoyISO, escapar } from './config.js';
 
 const $ = (s) => document.querySelector(s);
 const contenido = $('#contenido');
 
-const S = { productos: [], categorias: [], cobros: [], stockBajo: [], ventasHoy: [], ultimas: [], ticket: [], vista: 'dashboard' };
+const S = { productos: [], categorias: [], cobros: [], stockBajo: [], ventasHoy: [], ultimas: [], ticket: [], resumen: null, tiposDoc: [], factura: { tipo: 'FV', consecutivo: null }, vista: 'dashboard' };
 
 const inicioDia = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString(); };
 const sumar = (arr, campo) => arr.reduce((s, x) => s + Number(x[campo] || 0), 0);
@@ -79,14 +79,20 @@ async function iniciar() {
 // ── Datos ────────────────────────────────────────────────
 async function recargar() {
   try {
-    const [prod, cat, cob, hoy, ult] = await Promise.all([
+    const [prod, cat, cob, hoy, ult, res, tipos, sig] = await Promise.all([
       apiProductos.listar(),
       apiInformes.categorias(),
       apiCobros.listar(),
       apiVentas.listar({ desde: inicioDia(), limite: 200 }),
-      apiVentas.listar({ limite: 8 })
+      apiVentas.listar({ limite: 8 }),
+      apiResumen.cargar().catch(() => null),
+      apiDocumentos.tipos().catch(() => []),
+      apiDocumentos.siguiente(S.factura.tipo || 'FV').catch(() => null)
     ]);
 
+    S.tiposDoc = tipos;
+    S.factura.consecutivo = sig;
+    S.resumen = res;
     S.productos = prod;
     S.categorias = cat;
     S.cobros = cob;
@@ -118,13 +124,23 @@ function ir(vista) {
 
 // ═══ Vista: resumen ══════════════════════════════════════
 function vDashboard() {
-  const ingresosHoy = sumar(S.ventasHoy, 'total');
-  const gananciaHoy = sumar(S.ventasHoy, 'ganancia');
-
   const porBucket = (b) => S.cobros.filter((c) => c.bucket === b);
-  const vencido = porBucket('vencido');
-  const deHoy = porBucket('hoy');
-  const proximo = porBucket('proximo').filter((c) => { const d = (new Date(c.fecha_vencimiento) - new Date()) / 86400000; return d <= 7; });
+  const deHoyL = porBucket('hoy');
+  const proximoL = porBucket('proximo').filter((c) => { const d = (new Date(c.fecha_vencimiento) - new Date()) / 86400000; return d <= 7; });
+
+  // Cifras acumuladas (vista v_resumen). Si no está, se calcula con lo que haya cargado.
+  const R = S.resumen || {
+    vendido: sumar(S.ventasHoy, 'total'),
+    ventas_count: S.ventasHoy.length,
+    inversion: S.productos.reduce((s, p) => s + Number(p.stock || 0) * Number(p.precio_fabrica || 0), 0),
+    por_cobrar: sumar(S.cobros, 'saldo'),
+    por_cobrar_count: S.cobros.length,
+    cobra_hoy: sumar(deHoyL, 'saldo'),
+    cobra_hoy_count: deHoyL.length,
+    proximos_7: sumar(proximoL, 'saldo'),
+    proximos_7_count: proximoL.length
+  };
+  const utilidad = Number(R.vendido || 0) - Number(R.inversion || 0);
 
   contenido.innerHTML = `
     <div class="vista">
@@ -134,11 +150,11 @@ function vDashboard() {
       </div>
 
       <div class="kpis">
-        <div class="kpi kpi--ok"><span class="kpi__label">Vendido hoy</span><span class="kpi__valor">${money(ingresosHoy)}</span><p class="kpi__nota">${S.ventasHoy.length} venta(s)</p></div>
-        <div class="kpi kpi--ok"><span class="kpi__label">Ganancia hoy</span><span class="kpi__valor">${money(gananciaHoy)}</span><p class="kpi__nota">${ingresosHoy ? Math.round((gananciaHoy / ingresosHoy) * 100) : 0}% margen</p></div>
-        <div class="kpi kpi--peligro"><span class="kpi__label">Vencido</span><span class="kpi__valor">${money(sumar(vencido, 'saldo'))}</span><p class="kpi__nota">${vencido.length} en mora</p></div>
-        <div class="kpi kpi--aviso"><span class="kpi__label">Se cobra hoy</span><span class="kpi__valor">${money(sumar(deHoy, 'saldo'))}</span><p class="kpi__nota">${deHoy.length} cobro(s)</p></div>
-        <div class="kpi"><span class="kpi__label">Próximos 7 días</span><span class="kpi__valor">${money(sumar(proximo, 'saldo'))}</span><p class="kpi__nota">${proximo.length} por vencer</p></div>
+        <div class="kpi kpi--ok"><span class="kpi__label">Vendido</span><span class="kpi__valor">${money(R.vendido)}</span><p class="kpi__nota">${R.ventas_count} venta(s) en total</p></div>
+        <div class="kpi"><span class="kpi__label">Inversión</span><span class="kpi__valor">${money(R.inversion)}</span><p class="kpi__nota">${utilidad >= 0 ? 'Recuperado ' : 'Falta '}${money(Math.abs(utilidad))}</p></div>
+        <div class="kpi kpi--peligro"><span class="kpi__label">Por cobrar</span><span class="kpi__valor">${money(R.por_cobrar)}</span><p class="kpi__nota">${R.por_cobrar_count} sin pagar</p></div>
+        <div class="kpi kpi--aviso"><span class="kpi__label">Se cobra hoy</span><span class="kpi__valor">${money(R.cobra_hoy)}</span><p class="kpi__nota">${R.cobra_hoy_count} cobro(s)</p></div>
+        <div class="kpi"><span class="kpi__label">Próximos 7 días</span><span class="kpi__valor">${money(R.proximos_7)}</span><p class="kpi__nota">${R.proximos_7_count} por vencer</p></div>
       </div>
 
       <div class="doble">
@@ -291,78 +307,280 @@ function modalStock(p) {
   });
 }
 
-// ═══ Vista: registrar venta ══════════════════════════════
+// ═══ Vista: factura de venta ═════════════════════════════
+const ICO = {
+  guardar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>',
+  nuevo:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15h6"/></svg>',
+  limpiar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>',
+  mas:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  x:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+};
+
 function vVenta() {
+  const tipos = S.tiposDoc.length ? S.tiposDoc : [{ codigo: 'FV', nombre: 'Factura de venta' }];
+  const tipoSel = S.factura.tipo || 'FV';
+  const req = '<span class="req">*</span>';
+
   contenido.innerHTML = `
     <div class="vista">
-      <div class="cabecera"><div><h1>Registrar venta</h1><p class="cabecera__sub">El stock se descuenta al guardar.</p></div></div>
-      <div class="venta-grid">
-        <section class="bloque"><div class="bloque__cabeza"><h2>Productos</h2><input class="input" id="buscarVenta" placeholder="Buscar…" style="width:190px"></div><div class="selector-prod" id="listaVenta"></div></section>
-        <section class="ticket">
-          <div class="bloque__cabeza"><h2>Detalle</h2></div>
-          <div class="ticket__lineas" id="ticketLineas"></div>
-          <div class="ticket__total"><span>Total</span><strong id="ticketTotal">$ 0</strong></div>
-          <div class="ticket__ganancia"><span>Ganancia estimada</span><span id="ticketGanancia">$ 0</span></div>
-          <form id="formVenta" class="form-grid" style="margin-top:18px">
-            <label class="campo ancho-total"><span>Cliente</span><input class="input" name="cliente_nombre" required placeholder="Nombre"></label>
-            <label class="campo ancho-total"><span>Teléfono</span><input class="input" name="cliente_telefono" placeholder="3001234567"></label>
-            <label class="campo"><span>Fecha de pago</span><input class="input" name="fecha_pago" type="date" value="${hoyISO()}" required></label>
-            <label class="campo"><span>Método</span><select class="select" name="metodo_pago"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="nequi">Nequi / Daviplata</option></select></label>
-            <label class="campo ancho-total"><span>Nota</span><input class="input" name="nota" placeholder="Opcional…"></label>
-            <button class="btn btn--metal btn--ancho ancho-total" type="submit" id="btnGuardarVenta" disabled>Guardar venta</button>
-          </form>
-        </section>
+      <div class="cabecera">
+        <div><h1>Factura de venta</h1><p class="cabecera__sub">El stock se descuenta al guardar.</p></div>
       </div>
+
+      <form id="formFactura" class="factura">
+        <section class="bloque factura__principal">
+          <div class="bloque__cabeza">
+            <h2>Documento</h2>
+            <span class="doc-num" id="rotuloDoc">${tipoSel}-${S.factura.consecutivo || ''}</span>
+          </div>
+
+          <div class="rejilla-doc">
+            <label class="campo"><span>Tipo de documento: ${req}</span>
+              <select class="select" name="tipo_documento" id="tipoDoc">
+                ${tipos.map((t) => `<option value="${t.codigo}" ${t.codigo === tipoSel ? 'selected' : ''}>${t.codigo} · ${escapar(t.nombre)}</option>`).join('')}
+              </select></label>
+
+            <label class="campo"><span>Numeración:</span>
+              <input class="input input--auto" id="consecutivo" value="${S.factura.consecutivo ? tipoSel + '-' + S.factura.consecutivo : 'Auto'}" readonly title="Se asigna solo al guardar"></label>
+
+            <label class="campo"><span>Fecha documento: ${req}</span>
+              <input class="input" name="fecha_venta" id="fechaVenta" type="date" value="${hoyISO()}" required></label>
+
+            <label class="campo"><span>Fecha de cobro: ${req}</span>
+              <input class="input" name="fecha_cobro" id="fechaCobro" type="date" value="${hoyISO()}" required></label>
+
+            <label class="campo"><span>Forma de pago: ${req}</span>
+              <select class="select" name="forma_pago">
+                <option value="efectivo">Efectivo</option>
+                <option value="transferencia">Transferencia</option>
+              </select></label>
+
+            <label class="campo"><span>Tipo de pago:</span>
+              <input class="input" id="tipoPago" value="Contado" readonly></label>
+          </div>
+
+          <h3 class="sub-seccion">Datos del tercero</h3>
+
+          <div class="rejilla-doc">
+            <label class="campo"><span>Identificación:</span>
+              <input class="input" name="tercero_nit" placeholder="C.C. o NIT"></label>
+
+            <label class="campo"><span>Tercero: ${req}</span>
+              <input class="input" name="tercero_nombre" required placeholder="Nombre del cliente"></label>
+
+            <label class="campo"><span>Teléfono:</span>
+              <input class="input" name="telefono" placeholder="3001234567"></label>
+
+            <label class="campo"><span>Ciudad:</span>
+              <input class="input" name="ciudad" placeholder="Montería"></label>
+
+            <label class="campo campo--full"><span>Observación:</span>
+              <textarea class="textarea" name="nota" rows="3" placeholder="Opcional…"></textarea></label>
+          </div>
+
+          <div class="aviso-form oculto" id="avisoForm">⚠ <span id="avisoTexto"></span></div>
+
+          <div class="barra-doc">
+            <button class="btn btn--metal" type="submit" id="btnGuardarVenta">${ICO.guardar} Guardar</button>
+            <button class="btn btn--fantasma" type="button" id="btnNuevo">${ICO.nuevo} Nuevo</button>
+            <button class="btn btn--peligro" type="button" id="btnLimpiar">${ICO.limpiar} Limpiar</button>
+          </div>
+        </section>
+
+        <aside class="factura__lateral">
+          <div class="bloque">
+            <div class="bloque__cabeza">
+              <h2>Totales</h2>
+              <span class="chip-estado chip-estado--contado" id="estadoDoc">Contado</span>
+            </div>
+            <div class="totales-doc">
+              <div class="totales-doc__fila"><span>Ítems:</span><strong id="tItems">0</strong></div>
+              <div class="totales-doc__fila"><span>Unidades:</span><strong id="tUnidades">0</strong></div>
+              <div class="totales-doc__fila"><span>Subtotal:</span><strong id="tSubtotal">$ 0</strong></div>
+              <div class="totales-doc__fila"><span>Costo:</span><strong id="tCosto">$ 0</strong></div>
+              <div class="totales-doc__fila"><span>Ganancia:</span><strong id="tGanancia">$ 0</strong></div>
+              <div class="totales-doc__fila totales-doc__total"><span>Total factura:</span><strong id="tTotal">$ 0</strong></div>
+            </div>
+          </div>
+        </aside>
+
+        <section class="bloque factura__detalle">
+          <div class="bloque__cabeza">
+            <h2>Detalle</h2>
+            <button type="button" class="btn-mas" id="btnMas">${ICO.mas} Agregar línea</button>
+          </div>
+          <div id="lineasFactura"></div>
+          <div class="aviso-form oculto" id="avisoDetalle">⚠ <span>Los detalles no pueden estar vacíos</span></div>
+        </section>
+      </form>
     </div>`;
 
-  pintarListaVenta(); pintarTicket();
-  $('#buscarVenta').addEventListener('input', (e) => pintarListaVenta(e.target.value));
-  $('#formVenta').addEventListener('submit', guardarVenta);
+  pintarLineas();
+
+  $('#btnMas').addEventListener('click', agregarFila);
+  $('#btnLimpiar').addEventListener('click', () => { S.ticket = []; pintarLineas(); });
+  $('#btnNuevo').addEventListener('click', () => { S.ticket = []; ir('venta'); });
+
+  $('#tipoDoc').addEventListener('change', async (e) => {
+    S.factura.tipo = e.target.value;
+    S.factura.consecutivo = await apiDocumentos.siguiente(e.target.value).catch(() => null);
+    $('#consecutivo').value = S.factura.consecutivo ? `${e.target.value}-${S.factura.consecutivo}` : 'Auto';
+    rotular();
+  });
+  $('#fechaVenta').addEventListener('change', rotular);
+  $('#fechaCobro').addEventListener('change', rotular);
+  rotular();
+
+  $('#formFactura').addEventListener('submit', guardarVenta);
 }
 
-function pintarListaVenta(texto = '') {
-  const t = texto.toLowerCase();
-  const lista = S.productos.filter((p) => `${p.nombre} ${p.marca || ''}`.toLowerCase().includes(t)).sort((a, b) => (b.stock > 0) - (a.stock > 0) || a.nombre.localeCompare(b.nombre, 'es'));
-  $('#listaVenta').innerHTML = lista.length ? lista.map((p) => {
-    const enTicket = S.ticket.find((l) => l.producto_id === p.id)?.cantidad || 0;
-    const sinCupo = p.stock - enTicket <= 0;
-    return `<button class="prod-opcion" data-sumar="${p.id}" ${sinCupo ? 'disabled' : ''}><span><span class="prod-opcion__nombre">${escapar(p.nombre)}</span><span class="prod-opcion__meta">${p.stock === 0 ? 'Agotado' : `${p.stock - enTicket} disp.`}</span></span><span class="prod-opcion__precio">${money(p.precio_venta)}</span></button>`;
-  }).join('') : '<p class="mensaje-vacio">Sin coincidencias.</p>';
+function agregarFila() {
+  S.ticket.push({ producto_id: '', nombre_producto: '', cantidad: 1, precio_unitario: 0, costo_unitario: 0 });
+  pintarLineas();
+  const filas = document.querySelectorAll('[data-prod]');
+  filas[filas.length - 1]?.focus();
+}
+
+function rotular() {
+  const doc = $('#rotuloDoc'); if (!doc) return;
+  doc.textContent = S.factura.consecutivo ? `${$('#tipoDoc').value}-${S.factura.consecutivo}` : $('#tipoDoc').value;
+  const credito = $('#fechaCobro').value > $('#fechaVenta').value;
+  const e = $('#estadoDoc');
+  e.textContent = credito ? 'Crédito' : 'Contado';
+  e.className = `chip-estado chip-estado--${credito ? 'credito' : 'contado'}`;
+  $('#tipoPago').value = credito ? 'Crédito' : 'Contado';
+}
+
+// Unidades libres de un producto, descontando lo puesto en otras líneas
+const disponible = (id, exceptoIdx = -1) => {
+  const p = S.productos.find((x) => x.id === id);
+  if (!p) return 0;
+  const usado = S.ticket.reduce((s, l, i) => s + (l.producto_id === id && i !== exceptoIdx ? l.cantidad : 0), 0);
+  return Number(p.stock) - usado;
+};
+
+function opcionesProducto(seleccionado, idx) {
+  return S.productos
+    .filter((p) => p.activo && (Number(p.stock) > 0 || p.id === seleccionado))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+    .map((p) => `<option value="${p.id}" ${p.id === seleccionado ? 'selected' : ''}>${escapar(p.nombre)}${p.marca ? ' · ' + escapar(p.marca) : ''} (${disponible(p.id, idx)})</option>`)
+    .join('');
+}
+
+function pintarLineas() {
+  const cont = $('#lineasFactura'); if (!cont) return;
+  const total = S.ticket.reduce((s, l) => s + l.precio_unitario * l.cantidad, 0);
+  const costo = S.ticket.reduce((s, l) => s + l.costo_unitario * l.cantidad, 0);
+  const unidades = S.ticket.reduce((s, l) => s + l.cantidad, 0);
+
+  cont.innerHTML = `<div class="tabla-wrap"><table class="tabla-detalle">
+      <thead><tr>
+        <th class="col-i">#</th>
+        <th>Producto</th>
+        <th class="col-c">Cantidad</th>
+        <th class="col-v">Valor unitario</th>
+        <th class="col-t">Valor total</th>
+        <th class="col-x"></th>
+      </tr></thead>
+      <tbody>${S.ticket.length ? S.ticket.map((l, i) => `<tr>
+        <td class="col-i"><div class="celda col-i">${i + 1}</div></td>
+        <td><select class="select" data-prod="${i}"><option value="">— Selecciona —</option>${opcionesProducto(l.producto_id, i)}</select></td>
+        <td class="num"><input class="input" type="number" min="1" step="1" value="${l.cantidad}" data-cant="${i}"></td>
+        <td class="num"><input class="input" type="number" min="0" step="1" value="${l.precio_unitario}" data-vr="${i}"></td>
+        <td class="num"><div class="celda" style="text-align:right;font-weight:600">${money(l.precio_unitario * l.cantidad)}</div></td>
+        <td class="col-x"><button type="button" class="quitar" data-tquitar="${i}" title="Quitar">${ICO.x}</button></td>
+      </tr>`).join('') : '<tr class="vacio"><td colspan="6">Sin líneas todavía. Usa «Agregar línea».</td></tr>'}</tbody>
+      ${S.ticket.length ? `<tfoot><tr><td colspan="4" style="text-align:right">Total factura</td><td style="text-align:right">${money(total)}</td><td></td></tr></tfoot>` : ''}
+    </table></div>`;
+
+  $('#tItems').textContent = S.ticket.length;
+  $('#tUnidades').textContent = unidades;
+  $('#tSubtotal').textContent = money(total);
+  $('#tCosto').textContent = money(costo);
+  $('#tGanancia').textContent = money(total - costo);
+  $('#tTotal').textContent = money(total);
+  $('#avisoDetalle').classList.toggle('oculto', S.ticket.length > 0);
+
+  cont.querySelectorAll('[data-prod]').forEach((sel) => sel.addEventListener('change', (e) => {
+    const i = +e.target.dataset.prod;
+    const p = S.productos.find((x) => x.id === e.target.value);
+    const l = S.ticket[i];
+    l.producto_id = p ? p.id : '';
+    l.nombre_producto = p ? p.nombre : '';
+    l.precio_unitario = p ? Number(p.precio_venta) : 0;
+    l.costo_unitario = p ? Number(p.precio_fabrica) || 0 : 0;
+    if (p && l.cantidad > disponible(p.id, i)) l.cantidad = Math.max(1, disponible(p.id, i));
+    pintarLineas();
+  }));
+
+  cont.querySelectorAll('[data-cant]').forEach((inp) => inp.addEventListener('change', (e) => {
+    const i = +e.target.dataset.cant;
+    const l = S.ticket[i];
+    let c = parseInt(e.target.value, 10) || 1;
+    const max = l.producto_id ? disponible(l.producto_id, i) : c;
+    if (c > max) { avisar(`Solo hay ${max} de ${l.nombre_producto}`, 'error'); c = max; }
+    l.cantidad = Math.max(1, c);
+    pintarLineas();
+  }));
+
+  cont.querySelectorAll('[data-vr]').forEach((inp) => inp.addEventListener('change', (e) => {
+    S.ticket[+e.target.dataset.vr].precio_unitario = Math.max(0, Number(e.target.value) || 0);
+    pintarLineas();
+  }));
+
+  cont.querySelectorAll('[data-tquitar]').forEach((b) => b.addEventListener('click', (e) => {
+    S.ticket.splice(+e.currentTarget.dataset.tquitar, 1);
+    pintarLineas();
+  }));
 }
 
 function sumarAlTicket(id) {
   const p = S.productos.find((x) => x.id === id);
-  const linea = S.ticket.find((l) => l.producto_id === id);
-  if (linea) { if (linea.cantidad >= p.stock) return avisar(`Solo hay ${p.stock}`, 'error'); linea.cantidad++; }
-  else S.ticket.push({ producto_id: p.id, nombre_producto: p.nombre, cantidad: 1, precio_unitario: Number(p.precio_venta), costo_unitario: Number(p.precio_fabrica), max: p.stock });
-  pintarTicket(); pintarListaVenta($('#buscarVenta')?.value || '');
+  if (!p || disponible(id) <= 0) return;
+  const l = S.ticket.find((x) => x.producto_id === id);
+  if (l) l.cantidad++;
+  else S.ticket.push({ producto_id: p.id, nombre_producto: p.nombre, cantidad: 1, precio_unitario: Number(p.precio_venta), costo_unitario: Number(p.precio_fabrica) || 0 });
+  pintarLineas();
 }
 
-function pintarTicket() {
-  const cont = $('#ticketLineas'); if (!cont) return;
-  const total = S.ticket.reduce((s, l) => s + l.precio_unitario * l.cantidad, 0);
-  const costo = S.ticket.reduce((s, l) => s + l.costo_unitario * l.cantidad, 0);
-  cont.innerHTML = S.ticket.length ? S.ticket.map((l) => `<div class="ticket-linea"><div class="ticket-linea__info"><span class="ticket-linea__nombre">${escapar(l.nombre_producto)}</span><span class="ticket-linea__sub">${money(l.precio_unitario)} c/u · ${money(l.precio_unitario * l.cantidad)}</span></div><span class="paso-cant"><button type="button" data-tmenos="${l.producto_id}">−</button><span>${l.cantidad}</span><button type="button" data-tmas="${l.producto_id}" ${l.cantidad >= l.max ? 'disabled' : ''}>+</button></span><button type="button" class="ticket-linea__quitar" data-tquitar="${l.producto_id}">✕</button></div>`).join('') : '<p class="mensaje-vacio">Agrega productos.</p>';
-  $('#ticketTotal').textContent = money(total);
-  $('#ticketGanancia').textContent = money(total - costo);
-  $('#btnGuardarVenta').disabled = S.ticket.length === 0;
+function mostrarAviso(txt) {
+  $('#avisoTexto').textContent = txt;
+  $('#avisoForm').classList.remove('oculto');
 }
 
 async function guardarVenta(e) {
   e.preventDefault();
-  const btn = $('#btnGuardarVenta'); const f = new FormData(e.target);
+  const f = new FormData(e.target);
+  $('#avisoForm').classList.add('oculto');
+
+  const items = S.ticket.filter((l) => l.producto_id && l.cantidad > 0);
+  if (!items.length) { $('#avisoDetalle').classList.remove('oculto'); return mostrarAviso('Los detalles no pueden estar vacíos'); }
+  if (!f.get('tercero_nombre').trim()) return mostrarAviso('Aún quedan campos por rellenar');
+
+  const btn = $('#btnGuardarVenta');
   btn.disabled = true; btn.textContent = 'Guardando…';
   try {
-    const items = S.ticket.map(({ max, ...l }) => l);
-    const fechaPago = f.get('fecha_pago') ? new Date(f.get('fecha_pago') + 'T12:00:00').toISOString() : undefined;
-    const venta = await apiVentas.crear({
-      cliente_nombre: f.get('cliente_nombre').trim(), cliente_telefono: f.get('cliente_telefono').trim() || null,
-      nota: f.get('nota').trim() || null, items,
-      metodo_pago: f.get('metodo_pago'), fecha_pago: fechaPago
+    const venta = await apiVentas.facturar({
+      tipo_documento: f.get('tipo_documento'),
+      consecutivo: null, // lo asigna la base: último de ese tipo + 1
+      tercero_nombre: f.get('tercero_nombre').trim(),
+      tercero_nit: f.get('tercero_nit').trim() || null,
+      telefono: f.get('telefono').trim() || null,
+      fecha_venta: f.get('fecha_venta'),
+      fecha_cobro: f.get('fecha_cobro') || f.get('fecha_venta'),
+      forma_pago: f.get('forma_pago'),
+      nota: [f.get('nota').trim(), f.get('ciudad').trim() ? `Ciudad: ${f.get('ciudad').trim()}` : ''].filter(Boolean).join(' · ') || null,
+      items: items.map(({ max, ...l }) => l)
     });
-    S.ticket = []; avisar(`Venta #${venta.folio} · ${money(venta.total)}`); await recargar();
+    S.ticket = [];
+    avisar(`${venta.tipo_documento}-${venta.consecutivo} · ${money(venta.total)}`);
+    await recargar();
     ir('dashboard');
-  } catch (err) { avisar(err.message, 'error'); btn.disabled = false; btn.textContent = 'Guardar venta'; }
+  } catch (err) {
+    mostrarAviso(err.message);
+    avisar(err.message, 'error');
+    btn.disabled = false; btn.innerHTML = `${ICO.guardar} Guardar`;
+  }
 }
 
 // ═══ Vista: cobros ═══════════════════════════════════════
@@ -478,10 +696,6 @@ document.addEventListener('click', (e) => {
   const editar = t.closest('[data-editar]'); if (editar) return modalProducto(S.productos.find((p) => p.id === editar.dataset.editar));
   const stock = t.closest('[data-stock]'); if (stock) return modalStock(S.productos.find((p) => p.id === stock.dataset.stock));
   const sumar_ = t.closest('[data-sumar]'); if (sumar_) return sumarAlTicket(sumar_.dataset.sumar);
-  const tmas = t.closest('[data-tmas]'); if (tmas) return sumarAlTicket(tmas.dataset.tmas);
-  const tmenos = t.closest('[data-tmenos]');
-  if (tmenos) { const l = S.ticket.find((x) => x.producto_id === tmenos.dataset.tmenos); if (--l.cantidad <= 0) S.ticket = S.ticket.filter((x) => x !== l); pintarTicket(); pintarListaVenta($('#buscarVenta')?.value || ''); return; }
-  const tq = t.closest('[data-tquitar]'); if (tq) { S.ticket = S.ticket.filter((x) => x.producto_id !== tq.dataset.tquitar); pintarTicket(); pintarListaVenta($('#buscarVenta')?.value || ''); return; }
   const abonar = t.closest('[data-abonar]'); if (abonar) return modalAbono(S.cobros.find((c) => c.id === abonar.dataset.abonar));
   const recordar = t.closest('[data-recordar]'); if (recordar) return recordarPorWhats(S.cobros.find((c) => c.id === recordar.dataset.recordar));
 });

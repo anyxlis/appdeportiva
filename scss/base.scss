@@ -81,8 +81,8 @@ a { color: $azul-hielo; text-decoration: none; }
 
   &:hover {
     box-shadow:
-      inset 0 1px 2px rgba(255, 255, 255, .5),
-      0 8px 18px rgba(47, 87, 120, .45);
+      inset 0 1px 2px rgba(255, 255, 255, .3),
+      0 6px 16px rgba(20, 18, 15, .3);
   }
 }
 
@@ -102,7 +102,7 @@ a { color: $azul-hielo; text-decoration: none; }
   &:disabled { background: #cfe9db; border-color: #cfe9db; color: #6b8f7a; }
 }
 
-.btn--peligro { border-color: rgba(217, 93, 84, .5); color: #f0a9a4;
+.btn--peligro { border-color: rgba(178, 58, 52, .45); color: $peligro; background: rgba(178, 58, 52, .06);
   &:hover { background: rgba(217, 93, 84, .12); border-color: $peligro; } }
 
 .btn--sm { padding: 7px 13px; font-size: 13px; }

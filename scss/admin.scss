@@ -581,3 +581,272 @@
   display: grid;
   place-items: center;
 }
+// ── Factura de venta ────────────────────────────────────────
+.factura {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.75fr);
+  gap: 16px;
+  align-items: start;
+
+  &__principal { grid-column: 1; }
+  &__lateral   { grid-column: 2; position: sticky; top: 18px; display: grid; gap: 14px; }
+  &__detalle   { grid-column: 1 / -1; }
+
+  @media (max-width: 1040px) {
+    grid-template-columns: 1fr;
+    &__principal, &__lateral, &__detalle { grid-column: 1; }
+    &__lateral { position: static; }
+  }
+
+  .bloque {
+    padding: 18px;
+    margin-bottom: 0;
+
+    &__cabeza { margin-bottom: 14px; h2 { font-size: 17px; } }
+  }
+
+  .campo > span {
+    font-family: $texto;
+    font-size: 13px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: $gris;
+    font-weight: 500;
+  }
+
+  .input, .select, .textarea {
+    padding: 8px 11px;
+    font-size: 13.5px;
+    border-radius: $r-xs;
+  }
+
+  .req { color: $peligro; font-weight: 700; }
+
+  // Campo calculado por el sistema (numeración, tipo de pago)
+  .input--auto,
+  .input[readonly] {
+    background: $negro-700;
+    color: $gris;
+    cursor: default;
+    font-family: $mono;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.rejilla-doc {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 18px;
+
+  .campo--full { grid-column: 1 / -1; }
+  @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.sub-seccion {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: $gris-claro;
+  margin: 20px 0 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid $borde-suave;
+}
+
+.aviso-form {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 16px;
+  padding: 11px 14px;
+  font-size: 13px;
+  color: $peligro;
+  background: rgba(178, 58, 52, .07);
+  border-left: 3px solid $peligro;
+  border-radius: $r-xs;
+
+  &.oculto { display: none; }
+}
+
+// Barra de botones del documento
+.barra-doc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid $borde-suave;
+
+  .btn {
+    padding: 9px 16px;
+    font-size: 13.5px;
+    border-radius: $r-xs;
+
+    svg { width: 15px; height: 15px; flex: none; }
+  }
+
+  @media (max-width: 560px) {
+    .btn { flex: 1 1 100%; }
+  }
+}
+
+// Panel de totales — números pegados a la derecha
+.totales-doc {
+  display: grid;
+  gap: 0;
+
+  &__fila {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 16px;
+    padding: 8px 0;
+    font-size: 13px;
+    color: $gris;
+    border-bottom: 1px dotted $borde-suave;
+
+    strong {
+      @include cifra;
+      font-weight: 500;
+      color: $gris-claro;
+      text-align: right;
+      white-space: nowrap;
+    }
+  }
+
+  &__total {
+    border-bottom: none;
+    border-top: 2px solid $borde;
+    margin-top: 8px;
+    padding-top: 13px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: $gris-claro;
+
+    strong { font-size: 22px; font-weight: 700; color: $ok; }
+  }
+}
+
+.chip-estado {
+  @include etiqueta;
+  font-size: 9.5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid $borde;
+
+  &--contado { color: $ok;    border-color: rgba(63, 122, 78, .4); }
+  &--credito { color: $aviso; border-color: rgba(180, 121, 31, .4); }
+}
+
+.doc-num {
+  @include cifra;
+  font-size: 15px;
+  font-weight: 700;
+  color: $gris-claro;
+}
+
+// Tabla de detalle editable, estilo hoja de cálculo
+.tabla-detalle {
+  width: 100%;
+  font-size: 13px;
+  border-collapse: collapse;
+
+  th {
+    background: $negro-700;
+    font-family: $texto;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: $gris;
+    text-align: left;
+    white-space: nowrap;
+    padding: 9px 10px;
+    border: 1px solid $borde-suave;
+  }
+
+  td {
+    padding: 0;
+    border: 1px solid $borde-suave;
+    vertical-align: middle;
+    background: #fff;
+  }
+
+  .celda {
+    padding: 8px 10px;
+    @include cifra;
+    color: $gris-claro;
+
+    &--txt { font-family: $texto; }
+  }
+
+  .col-i { width: 42px; text-align: center; color: $gris-tenue; }
+  .col-c { width: 110px; }
+  .col-v { width: 140px; }
+  .col-t { width: 150px; }
+  .col-x { width: 46px; text-align: center; }
+
+  // Inputs embebidos: sin borde propio, llenan la celda
+  .input, .select {
+    width: 100%;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 8px 10px;
+    font-size: 13px;
+    box-shadow: none;
+
+    &:focus-visible { outline: 2px solid $azul-hielo; outline-offset: -2px; }
+  }
+
+  .num .input { text-align: right; @include cifra; }
+
+  tr:hover td { background: #fcfaf6; }
+
+  tfoot td {
+    background: $negro-700;
+    font-weight: 700;
+    color: $gris-claro;
+    padding: 9px 10px;
+  }
+
+  .vacio td {
+    padding: 26px 10px;
+    text-align: center;
+    color: $gris-tenue;
+    background: #fff;
+  }
+
+  .quitar {
+    @include foco;
+    width: 26px;
+    height: 26px;
+    margin: 4px auto;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: $r-xs;
+    background: transparent;
+    color: $gris-tenue;
+    cursor: pointer;
+
+    &:hover { background: rgba(178, 58, 52, .1); color: $peligro; }
+  }
+}
+
+.btn-mas {
+  @include foco;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: $r-xs;
+  border: 1px solid $borde;
+  background: #fff;
+  color: $gris-claro;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s $ease, border-color .15s $ease;
+
+  svg { width: 14px; height: 14px; }
+  &:hover { background: $negro-700; border-color: $azul-hondo; }
+}

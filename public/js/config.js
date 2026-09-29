@@ -127,6 +127,23 @@ export const ventas = {
     lanzar(error);
     return data;
   },
+  // Factura de venta: tipo + consecutivo, tercero, fechas y forma de pago
+  async facturar({ tipo_documento, consecutivo, tercero_nombre, tercero_nit, telefono, fecha_venta, fecha_cobro, forma_pago, items, nota }) {
+    const { data, error } = await supabase.rpc('registrar_factura', {
+      p_tipo_documento: tipo_documento || 'FV',
+      p_consecutivo: consecutivo ? Number(consecutivo) : null,
+      p_tercero_nombre: tercero_nombre,
+      p_tercero_nit: tercero_nit || null,
+      p_telefono: telefono || null,
+      p_fecha_venta: fecha_venta,
+      p_fecha_cobro: fecha_cobro || fecha_venta,
+      p_forma_pago: forma_pago || 'efectivo',
+      p_items: items,
+      p_nota: nota || null
+    });
+    lanzar(error);
+    return data;
+  },
   async crear({ cliente_nombre, cliente_telefono, nota, items, metodo_pago, fecha_pago }) {
     const { data, error } = await supabase.rpc('registrar_venta', {
       p_cliente_nombre: cliente_nombre,
@@ -166,6 +183,33 @@ export const cobros = {
     });
     lanzar(error);
     return { ok: true };
+  }
+};
+
+// ── Documentos (tipo + consecutivo) ───────────────────────
+export const documentos = {
+  async tipos() {
+    const { data, error } = await supabase
+      .from('tipos_documento')
+      .select('codigo, nombre, ultimo')
+      .eq('activo', true)
+      .order('orden');
+    lanzar(error);
+    return data;
+  },
+  async siguiente(tipo = 'FV') {
+    const { data, error } = await supabase.rpc('siguiente_consecutivo', { p_tipo: tipo });
+    lanzar(error);
+    return data;
+  }
+};
+
+// ── Resumen acumulado ─────────────────────────────────────
+export const resumen = {
+  async cargar() {
+    const { data, error } = await supabase.from('v_resumen').select('*').single();
+    lanzar(error);
+    return data;
   }
 };
 
