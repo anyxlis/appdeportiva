@@ -1,0 +1,1279 @@
+@use 'tokens' as *;
+@use 'mixins' as *;
+
+// ── Acceso ────────────────────────────────────────────────
+.acceso {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+
+  &__glow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(620px 420px at 50% -8%, rgba(184, 165, 134, .22), transparent 70%),
+      radial-gradient(520px 380px at 100% 100%, rgba(20, 18, 15, .05), transparent 70%);
+  }
+
+  &__caja {
+    @include panel($r-lg);
+    width: min(400px, 100%);
+    padding: 40px 34px 34px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: subir .5s $ease-out;
+  }
+
+  &__logo {
+    width: 108px; height: 108px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    overflow: hidden;
+    font-family: $display;
+    font-weight: 800;
+    font-size: 40px;
+    color: #fff;
+    background: $tinta;
+    margin-bottom: 22px;
+    box-shadow: 0 16px 36px rgba(20, 18, 15, .28);
+  }
+
+  h1 { font-size: 30px; margin-bottom: 6px; }
+  p { color: $gris-tenue; font-size: 13.5px; margin: 0 0 26px; }
+
+  form { width: 100%; display: flex; flex-direction: column; gap: 14px; text-align: left; }
+}
+
+.error-msg {
+  color: $peligro;
+  font-size: 13px;
+  min-height: 18px;
+  margin: 0;
+}
+
+// ── Estructura ────────────────────────────────────────────
+.app {
+  display: grid;
+  grid-template-columns: 234px 1fr;
+  min-height: 100dvh;
+  position: relative;
+  z-index: 1;
+}
+
+.lateral {
+  border-right: 1px solid $borde-suave;
+  background: $negro-900;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px;
+  gap: 6px;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+
+  &__marca {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 0 8px 20px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid $borde-suave;
+  }
+
+  &__logo {
+    width: 34px; height: 34px;
+    display: grid; place-items: center;
+    @include metal($r-sm);
+    font-family: $display;
+    font-size: 19px;
+    padding-top: 2px;
+  }
+
+  &__nombre { font-family: $display; font-size: 20px; text-transform: uppercase; line-height: 1; }
+  &__rol { @include etiqueta; font-size: 9px; }
+
+  &__pie { margin-top: auto; padding-top: 14px; border-top: 1px solid $borde-suave; }
+  &__correo { @include etiqueta; display: block; padding: 0 8px 10px; overflow: hidden; text-overflow: ellipsis; }
+
+  @media (max-width: 900px) {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    align-items: center;
+    padding: 10px;
+
+    &__marca, &__correo { display: none; }
+    &__pie { margin: 0; padding: 0; border: none; }
+  }
+}
+
+.app { @media (max-width: 900px) { grid-template-columns: 1fr; } }
+
+.tab {
+  @include foco;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: $r-sm;
+  border: 1px solid transparent;
+  background: transparent;
+  color: $gris;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: all .2s $ease;
+
+  svg { flex-shrink: 0; opacity: .7; }
+
+  &:hover { background: $negro-800; color: $gris-claro; }
+
+  &.activo {
+    @include metal($r-sm);
+    svg { opacity: 1; }
+  }
+
+  &__alerta {
+    @include cifra;
+    margin-left: auto;
+    min-width: 19px;
+    padding: 0 5px;
+    height: 19px;
+    display: grid; place-items: center;
+    border-radius: 99px;
+    background: rgba(217, 93, 84, .18);
+    border: 1px solid rgba(217, 93, 84, .4);
+    color: #f0a9a4;
+    font-size: 10.5px;
+  }
+}
+
+.panel-main {
+  padding: clamp(20px, 3vw, 34px);
+  overflow-x: hidden;
+}
+
+.vista { animation: subir .35s $ease-out; }
+
+.cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 24px;
+
+  h1 { font-size: clamp(34px, 5vw, 46px); }
+  &__sub { color: $gris-tenue; font-size: 13.5px; margin: 4px 0 0; }
+  &__acciones { display: flex; gap: 10px; flex-wrap: wrap; }
+}
+
+// ── Tarjetas de indicador ─────────────────────────────────
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(196px, 1fr));
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.kpi {
+  @include panel($r);
+  padding: 17px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .25s, transform .25s $ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: $metal;
+    opacity: .55;
+  }
+
+  &:hover { border-color: $azul-hondo; transform: translateY(-2px); }
+
+  &__label { @include etiqueta; display: block; margin-bottom: 9px; }
+  &__valor { @include cifra; font-size: clamp(22px, 3vw, 29px); color: $gris-claro; line-height: 1; }
+  &__nota { font-size: 12px; color: $gris-tenue; margin: 7px 0 0; }
+
+  &--peligro::before { background: linear-gradient(90deg, #8c2f2a, $peligro); }
+  &--aviso::before   { background: linear-gradient(90deg, #8a6520, $aviso); }
+  &--ok::before      { background: linear-gradient(90deg, #1f6b51, $ok); }
+}
+
+// ── Bloques ───────────────────────────────────────────────
+.bloque {
+  @include panel($r);
+  padding: 18px;
+  margin-bottom: 18px;
+
+  &__cabeza {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+
+    h2 { font-size: 24px; }
+  }
+}
+
+.doble {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
+
+  @media (max-width: 1000px) { grid-template-columns: 1fr; }
+}
+
+// ── Tablas ────────────────────────────────────────────────
+.tabla-wrap { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 560px;
+
+  th {
+    @include etiqueta;
+    text-align: left;
+    padding: 0 12px 10px;
+    border-bottom: 1px solid $borde;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 11px 12px;
+    border-bottom: 1px solid $borde-suave;
+    vertical-align: middle;
+  }
+
+  tbody tr { transition: background .18s; }
+  tbody tr:hover { background: rgba(70, 130, 180, .07); }
+
+  .num { @include cifra; text-align: right; white-space: nowrap; }
+  .acciones { display: flex; gap: 6px; justify-content: flex-end; }
+  .nombre-prod { font-weight: 600; color: $gris-claro; }
+  .sub { display: block; color: $gris-tenue; font-size: 11.5px; font-weight: 400; }
+}
+
+.fila-agotada td { opacity: .5; }
+.fila-alerta { box-shadow: inset 3px 0 0 $aviso; }
+.fila-vencida { box-shadow: inset 3px 0 0 $peligro; }
+
+// ── Barra de progreso de stock ────────────────────────────
+.medidor {
+  width: 74px;
+  height: 5px;
+  border-radius: 99px;
+  background: $negro-700;
+  overflow: hidden;
+
+  &__relleno {
+    height: 100%;
+    border-radius: 99px;
+    background: $metal;
+    transition: width .5s $ease-out;
+  }
+
+  &--bajo &__relleno { background: linear-gradient(90deg, #8a6520, $aviso); }
+  &--nulo &__relleno { background: $peligro; }
+}
+
+// ── Modal ─────────────────────────────────────────────────
+.modal-velo {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 5, 7, .75);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .25s, visibility .25s;
+
+  &.abierto { opacity: 1; visibility: visible; }
+}
+
+.modal {
+  @include panel($r-lg);
+  width: min(620px, 100%);
+  max-height: 88dvh;
+  overflow-y: auto;
+  padding: 24px;
+  transform: translateY(14px) scale(.98);
+  transition: transform .3s $ease-out;
+
+  .modal-velo.abierto & { transform: none; }
+
+  &__cabeza {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+
+    h2 { font-size: 28px; }
+  }
+
+  &__cerrar {
+    @include foco;
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+    border-radius: $r-sm;
+    border: 1px solid $borde-suave;
+    background: transparent;
+    color: $gris;
+    cursor: pointer;
+    &:hover { border-color: $peligro; color: $gris-claro; }
+  }
+
+  &__pie {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid $borde-suave;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+
+  .ancho-total { grid-column: 1 / -1; }
+
+  @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.calculo {
+  @include etiqueta;
+  color: $azul-hielo;
+  font-size: 11px;
+}
+
+// ── Registrar venta ───────────────────────────────────────
+.venta-grid {
+  display: grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 18px;
+  align-items: start;
+
+  @media (max-width: 1000px) { grid-template-columns: 1fr; }
+}
+
+.selector-prod {
+  max-height: 380px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.prod-opcion {
+  @include foco;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: $r-sm;
+  border: 1px solid $borde-suave;
+  background: $negro-800;
+  cursor: pointer;
+  text-align: left;
+  transition: all .18s $ease;
+
+  &:hover:not(:disabled) { border-color: $azul; transform: translateX(3px); }
+  &:disabled { opacity: .35; cursor: not-allowed; }
+
+  &__nombre { font-weight: 600; font-size: 13.5px; }
+  &__meta { @include etiqueta; font-size: 10px; }
+  &__precio { @include cifra; margin-left: auto; color: $azul-hielo; font-size: 13.5px; }
+}
+
+.ticket {
+  @include panel($r);
+  padding: 16px;
+  position: sticky;
+  top: 20px;
+
+  &__lineas {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin: 12px 0;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  &__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-top: 12px;
+    border-top: 1px dashed $borde;
+
+    span { @include etiqueta; }
+    strong { @include cifra; font-size: 25px; color: $gris-claro; font-weight: 700; }
+  }
+
+  &__ganancia {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: $ok;
+    margin-top: 5px;
+  }
+}
+
+.ticket-linea {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+  padding: 9px 0;
+  border-bottom: 1px solid $borde-suave;
+  animation: subir .25s $ease-out;
+
+  &:last-child { border-bottom: none; }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__nombre {
+    font-weight: 600;
+    color: $gris-claro;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__sub { @include cifra; color: $gris-tenue; font-size: 11.5px; }
+  &__quitar {
+    @include foco;
+    width: 24px; height: 24px;
+    display: grid; place-items: center;
+    border: 1px solid $borde-suave;
+    border-radius: $r-xs;
+    background: transparent;
+    color: $gris-tenue;
+    cursor: pointer;
+    &:hover { border-color: $peligro; color: $peligro; }
+  }
+}
+
+.paso-cant {
+  display: flex;
+  align-items: center;
+  border: 1px solid $borde-suave;
+  border-radius: $r-xs;
+  overflow: hidden;
+
+  button {
+    @include foco;
+    width: 22px; height: 24px;
+    background: $negro-800;
+    border: none;
+    color: $gris;
+    cursor: pointer;
+    &:hover:not(:disabled) { background: $azul-hondo; color: #fff; }
+    &:disabled { opacity: .3; }
+  }
+  span { @include cifra; width: 26px; text-align: center; font-size: 12.5px; }
+}
+
+// ── Informes ──────────────────────────────────────────────
+.grafico {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 180px;
+  padding-top: 16px;
+}
+
+.columna {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  min-width: 0;
+
+  &__barra {
+    width: 100%;
+    max-width: 44px;
+    border-radius: $r-xs $r-xs 0 0;
+    background: $metal;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, .35);
+    transition: height .6s $ease-out, filter .2s;
+    position: relative;
+
+    &:hover { filter: brightness(1.25); }
+  }
+
+  &__dia { @include etiqueta; font-size: 9px; }
+  &__valor { @include cifra; font-size: 10.5px; color: $gris; }
+}
+
+.lista-top {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.top-item {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  gap: 11px;
+  align-items: center;
+  font-size: 13.5px;
+
+  &__pos {
+    @include cifra;
+    width: 26px; height: 26px;
+    display: grid; place-items: center;
+    border-radius: $r-xs;
+    background: $negro-700;
+    border: 1px solid $borde-suave;
+    font-size: 11px;
+    color: $azul-hielo;
+  }
+
+  &__valor { @include cifra; color: $gris-claro; }
+  &__sub { @include etiqueta; font-size: 10px; }
+}
+
+.mensaje-vacio {
+  padding: 34px 16px;
+  text-align: center;
+  color: $gris-tenue;
+  font-size: 13.5px;
+}
+
+.cargando-full {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+// ── Factura de venta ────────────────────────────────────────
+.factura {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.75fr);
+  gap: 16px;
+  align-items: start;
+
+  &__principal { grid-column: 1; }
+  &__lateral   { grid-column: 2; position: sticky; top: 18px; display: grid; gap: 14px; }
+  &__detalle   { grid-column: 1 / -1; }
+
+  @media (max-width: 1040px) {
+    grid-template-columns: 1fr;
+    &__principal, &__lateral, &__detalle { grid-column: 1; }
+    &__lateral { position: static; }
+  }
+
+  .bloque {
+    padding: 18px;
+    margin-bottom: 0;
+
+    &__cabeza { margin-bottom: 14px; h2 { font-size: 17px; } }
+  }
+
+  .campo > span {
+    font-family: $texto;
+    font-size: 13px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: $gris;
+    font-weight: 500;
+  }
+
+  .input, .select, .textarea {
+    padding: 8px 11px;
+    font-size: 13.5px;
+    border-radius: $r-xs;
+  }
+
+  .req { color: $peligro; font-weight: 700; }
+
+  // Campo calculado por el sistema (numeración, tipo de pago)
+  .input--auto,
+  .input[readonly] {
+    background: $negro-700;
+    color: $gris;
+    cursor: default;
+    font-family: $mono;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.rejilla-doc {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 18px;
+
+  .campo--full { grid-column: 1 / -1; }
+  @media (max-width: 560px) { grid-template-columns: 1fr; }
+}
+
+.sub-seccion {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: $gris-claro;
+  margin: 20px 0 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid $borde-suave;
+}
+
+.aviso-form {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 16px;
+  padding: 11px 14px;
+  font-size: 13px;
+  color: $peligro;
+  background: rgba(178, 58, 52, .07);
+  border-left: 3px solid $peligro;
+  border-radius: $r-xs;
+
+  &.oculto { display: none; }
+}
+
+// Barra de botones del documento
+.barra-doc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid $borde-suave;
+
+  .btn {
+    padding: 9px 16px;
+    font-size: 13.5px;
+    border-radius: $r-xs;
+
+    svg { width: 15px; height: 15px; flex: none; }
+  }
+
+  @media (max-width: 560px) {
+    .btn { flex: 1 1 100%; }
+  }
+}
+
+// Panel de totales — números pegados a la derecha
+.totales-doc {
+  display: grid;
+  gap: 0;
+
+  &__fila {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 16px;
+    padding: 8px 0;
+    font-size: 13px;
+    color: $gris;
+    border-bottom: 1px dotted $borde-suave;
+
+    strong {
+      @include cifra;
+      font-weight: 500;
+      color: $gris-claro;
+      text-align: right;
+      white-space: nowrap;
+    }
+  }
+
+  &__total {
+    border-bottom: none;
+    border-top: 2px solid $borde;
+    margin-top: 8px;
+    padding-top: 13px;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: $gris-claro;
+
+    strong { font-size: 22px; font-weight: 700; color: $ok; }
+  }
+}
+
+.chip-estado {
+  @include etiqueta;
+  font-size: 9.5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid $borde;
+
+  &--contado { color: $ok;    border-color: rgba(63, 122, 78, .4); }
+  &--credito { color: $aviso; border-color: rgba(180, 121, 31, .4); }
+}
+
+.doc-num {
+  @include cifra;
+  font-size: 15px;
+  font-weight: 700;
+  color: $gris-claro;
+}
+
+// Tabla de detalle editable, estilo hoja de cálculo
+.tabla-detalle {
+  width: 100%;
+  font-size: 13px;
+  border-collapse: collapse;
+
+  th {
+    background: $negro-700;
+    font-family: $texto;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: $gris;
+    text-align: left;
+    white-space: nowrap;
+    padding: 9px 10px;
+    border: 1px solid $borde-suave;
+  }
+
+  td {
+    padding: 0;
+    border: 1px solid $borde-suave;
+    vertical-align: middle;
+    background: #fff;
+  }
+
+  .celda {
+    padding: 8px 10px;
+    @include cifra;
+    color: $gris-claro;
+
+    &--txt { font-family: $texto; }
+  }
+
+  .col-i { width: 42px; text-align: center; color: $gris-tenue; }
+  .col-c { width: 110px; }
+  .col-v { width: 140px; }
+  .col-t { width: 150px; }
+  .col-x { width: 46px; text-align: center; }
+
+  // Inputs embebidos: sin borde propio, llenan la celda
+  .input, .select {
+    width: 100%;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 8px 10px;
+    font-size: 13px;
+    box-shadow: none;
+
+    &:focus-visible { outline: 2px solid $azul-hielo; outline-offset: -2px; }
+  }
+
+  .num .input { text-align: right; @include cifra; }
+
+  tr:hover td { background: #fcfaf6; }
+
+  tfoot td {
+    background: $negro-700;
+    font-weight: 700;
+    color: $gris-claro;
+    padding: 9px 10px;
+  }
+
+  .vacio td {
+    padding: 26px 10px;
+    text-align: center;
+    color: $gris-tenue;
+    background: #fff;
+  }
+
+  .quitar {
+    @include foco;
+    width: 26px;
+    height: 26px;
+    margin: 4px auto;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: $r-xs;
+    background: transparent;
+    color: $gris-tenue;
+    cursor: pointer;
+
+    &:hover { background: rgba(178, 58, 52, .1); color: $peligro; }
+  }
+}
+
+.btn-mas {
+  @include foco;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: $r-xs;
+  border: 1px solid $borde;
+  background: #fff;
+  color: $gris-claro;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s $ease, border-color .15s $ease;
+
+  svg { width: 14px; height: 14px; }
+  &:hover { background: $negro-700; border-color: $azul-hondo; }
+}
+
+// ════════════════════════════════════════════════════════════
+//  Responsive — tabletas y celulares
+// ════════════════════════════════════════════════════════════
+
+// ── Navegación: barra superior pegajosa ─────────────────────
+@media (max-width: 900px) {
+  .lateral {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    gap: 6px;
+    background: $negro-900;
+    border-right: none;
+    border-bottom: 1px solid $borde-suave;
+    box-shadow: 0 2px 10px rgba(20, 18, 15, .06);
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar { display: none; }
+    &__pie .btn { white-space: nowrap; }
+  }
+
+  .tab {
+    padding: 9px 13px;
+    font-size: 13px;
+    flex: none;
+  }
+}
+
+// ── Celular ─────────────────────────────────────────────────
+@media (max-width: 680px) {
+  .panel-main { padding: 16px 14px 28px; }
+
+  .cabecera {
+    margin-bottom: 18px;
+    h1 { font-size: 27px; }
+    &__sub { font-size: 12.5px; }
+    &__acciones { width: 100%; .btn { flex: 1; } }
+  }
+
+  // Dos indicadores por fila en vez de uno
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .kpi {
+    padding: 13px 13px;
+
+    &__label { font-size: 9.5px; }
+    &__valor { font-size: 21px; }
+    &__nota  { font-size: 11px; }
+  }
+
+  .bloque {
+    padding: 14px;
+    margin-bottom: 14px;
+
+    &__cabeza h2 { font-size: 19px; }
+  }
+
+  // Evitar el zoom automático de iOS al enfocar un campo
+  .input, .select, .textarea { font-size: 16px; }
+
+  // Tablas normales: se deslizan a lo ancho
+  .tabla {
+    font-size: 12.5px;
+    th, td { padding: 8px 9px; }
+  }
+
+  .tabla-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  // Modal a pantalla completa
+  .modal-velo { padding: 0; place-items: end stretch; }
+
+  .modal {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: $r-lg $r-lg 0 0;
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+
+    &__cabeza h2 { font-size: 22px; }
+    &__pie { flex-direction: column-reverse; .btn { width: 100%; } }
+  }
+
+  // ── Factura: la tabla de detalle pasa a tarjetas ──────────
+  .factura {
+    gap: 12px;
+
+    .bloque { padding: 14px; }
+    .campo > span { font-size: 12.5px; }
+  }
+
+  .rejilla-doc { gap: 11px; }
+
+  .tabla-detalle {
+    display: block;
+
+    thead { display: none; }
+    tbody, tfoot { display: block; }
+
+    tr {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      margin-bottom: 10px;
+      border: 1px solid $borde-suave;
+      border-radius: $r-sm;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    td {
+      display: block;
+      border: none;
+      border-top: 1px solid $borde-suave;
+      padding: 9px 11px;
+
+      // Etiqueta de la columna, tomada de data-rotulo
+      &::before {
+        content: attr(data-rotulo);
+        display: block;
+        font-size: 10.5px;
+        color: $gris-tenue;
+        margin-bottom: 3px;
+      }
+
+      &.col-i,
+      &[data-rotulo='Producto'] {
+        grid-column: 1 / -1;
+        border-top: none;
+      }
+    }
+
+    // El número de línea va junto al nombre, no en su propia caja
+    .col-i {
+      display: none;
+    }
+
+    .celda { padding: 0; }
+
+    .input, .select { padding: 4px 0; font-size: 15px; }
+    .num .input { text-align: left; }
+
+    .col-x {
+      grid-column: 1 / -1;
+      text-align: right;
+      &::before { display: none; }
+    }
+
+    .quitar { margin: 0 0 0 auto; }
+
+    tr.vacio {
+      display: block;
+      td { display: block; padding: 22px 12px; &::before { display: none; } }
+    }
+
+    tfoot tr {
+      grid-template-columns: 1fr;
+      background: $negro-700;
+    }
+    tfoot td {
+      text-align: left !important;
+      &::before { display: none; }
+    }
+  }
+
+  .barra-doc {
+    gap: 8px;
+    .btn { flex: 1 1 100%; }
+  }
+
+  // Gráfico de informes
+  .grafico { overflow-x: auto; }
+}
+
+// ── Pantallas muy angostas ──────────────────────────────────
+@media (max-width: 380px) {
+  .kpis { grid-template-columns: 1fr; }
+  .cabecera h1 { font-size: 24px; }
+}
+
+// ════════════════════════════════════════════════════════════
+//  Inventario en tarjetas
+// ════════════════════════════════════════════════════════════
+.inv-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  &__buscar { flex: 1 1 220px; max-width: 340px; }
+}
+
+.inv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chip-filtro {
+  @include foco;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid $borde;
+  background: #fff;
+  color: $gris;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .18s $ease;
+
+  &:hover { border-color: $azul-hondo; }
+
+  &.activo {
+    background: $tinta;
+    border-color: $tinta;
+    color: #fff;
+  }
+
+  .punto { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+}
+
+.punto--ok      { background: $ok; }
+.punto--aviso   { background: $aviso; }
+.punto--peligro { background: $peligro; }
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+  gap: 14px;
+}
+
+.inv-card {
+  @include panel($r);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .2s $ease, border-color .2s, box-shadow .2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: $borde;
+    box-shadow: 0 10px 24px rgba(20, 18, 15, .1);
+  }
+
+  &--bajo    { border-color: rgba(180, 121, 31, .45); }
+  &--agotado { border-color: rgba(178, 58, 52, .4); }
+
+  // ── Foto ──────────────────────────────────────────────
+  &__foto {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: $negro-700;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  &__sinfoto {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    font-family: $display;
+    font-size: 34px;
+    color: $borde;
+    background: linear-gradient(135deg, #f6f1e8, #ece5d8);
+  }
+
+  &__cat {
+    position: absolute;
+    top: 9px; left: 9px;
+    width: 24px; height: 24px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: rgba(20, 18, 15, .78);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    backdrop-filter: blur(3px);
+  }
+
+  &__stock {
+    @include cifra;
+    position: absolute;
+    top: 9px; right: 9px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .92);
+    border: 1px solid $borde-suave;
+    font-size: 11px;
+    font-weight: 600;
+    color: $gris-claro;
+    backdrop-filter: blur(3px);
+
+    &--bajo    { color: $aviso;  border-color: rgba(180, 121, 31, .4); }
+    &--agotado { color: $peligro; border-color: rgba(178, 58, 52, .4); }
+  }
+
+  &__oculto {
+    position: absolute;
+    bottom: 9px; left: 9px;
+    @include etiqueta;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(20, 18, 15, .78);
+    color: #fff;
+  }
+
+  // ── Cuerpo ────────────────────────────────────────────
+  &__cuerpo {
+    padding: 12px 13px 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__nombre {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: $gris-claro;
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: .01em;
+  }
+
+  &__marca {
+    @include etiqueta;
+    font-size: 9.5px;
+    margin-top: 2px;
+    display: block;
+  }
+
+  &__linea {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  &__precio { @include cifra; font-size: 15px; font-weight: 700; color: $gris-claro; }
+
+  &__estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    color: $gris-tenue;
+
+    .punto { width: 7px; height: 7px; border-radius: 50%; }
+  }
+
+  &__acciones {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    margin-top: 12px;
+    background: $borde-suave;
+    border-top: 1px solid $borde-suave;
+
+    button {
+      @include foco;
+      padding: 9px 4px;
+      border: none;
+      background: #fff;
+      color: $gris;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+
+      &:hover { background: $negro-700; color: $gris-claro; }
+      &.peligro:hover { background: rgba(178, 58, 52, .1); color: $peligro; }
+    }
+  }
+}
+
+// Barra de nivel de stock
+.nivel {
+  height: 4px;
+  border-radius: 99px;
+  background: $borde-suave;
+  overflow: hidden;
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: 99px;
+    background: $ok;
+    transition: width .3s $ease;
+  }
+
+  &--bajo span    { background: $aviso; }
+  &--agotado span { background: $peligro; }
+}
+
+@media (max-width: 680px) {
+  .inv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .inv-card {
+    &__cuerpo { padding: 10px 10px 0; }
+    &__nombre { font-size: 12.5px; }
+    &__precio { font-size: 13.5px; }
+    &__acciones button { font-size: 11px; padding: 9px 2px; }
+  }
+  .inv-barra__buscar { max-width: none; flex: 1 1 100%; }
+}
+
+@media (max-width: 380px) {
+  .inv-grid { grid-template-columns: 1fr; }
+}

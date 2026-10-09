@@ -1,12 +1,40 @@
 {
   "name": "beland-house",
-  "version": "2.0.0",
-  "private": true,
+  "version": "0.0.0",
   "scripts": {
-    "css": "sass scss/main.scss public/css/main.css --style=expanded --no-source-map",
-    "css:watch": "sass --watch scss/main.scss public/css/main.css --no-source-map"
+    "ng": "ng",
+    "start": "ng serve --open",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/common": "^19.2.0",
+    "@angular/compiler": "^19.2.0",
+    "@angular/core": "^19.2.0",
+    "@angular/forms": "^19.2.0",
+    "@angular/platform-browser": "^19.2.0",
+    "@angular/platform-browser-dynamic": "^19.2.0",
+    "@angular/router": "^19.2.0",
+    "@supabase/supabase-js": "^2.45.4",
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.15.0"
   },
   "devDependencies": {
-    "sass": "^1.77.0"
+    "@angular-devkit/build-angular": "^19.2.15",
+    "@angular/cli": "^19.2.15",
+    "@angular/compiler-cli": "^19.2.0",
+    "@types/jasmine": "~5.1.0",
+    "jasmine-core": "~5.6.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.7.2"
   }
 }

@@ -1,4 +1,4 @@
-import { catalogo, NEGOCIO, money, escapar } from './config.js';
+import { catalogo, NEGOCIO, money, escapar } from './config.js?v=27';
 
 const $ = (s) => document.querySelector(s);
 const rejilla = $('#rejilla');

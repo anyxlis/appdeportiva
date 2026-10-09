@@ -1,0 +1,12 @@
+{
+  "name": "beland-house",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "css": "sass scss/main.scss public/css/main.css --style=expanded --no-source-map",
+    "css:watch": "sass --watch scss/main.scss public/css/main.css --no-source-map"
+  },
+  "devDependencies": {
+    "sass": "^1.77.0"
+  }
+}
