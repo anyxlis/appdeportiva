@@ -5,12 +5,13 @@ import { StoreService } from '../core/store.service';
 import { ToastService } from '../core/toast.service';
 import { money } from '../core/format';
 import { ModalComponent } from './modal.component';
+import { BuscadorComponent } from './buscador.component';
 
 /** Crear / editar producto de venta. El stock entra como movimiento (cuenta como inversión). */
 @Component({
   selector: 'app-producto-form',
   standalone: true,
-  imports: [ModalComponent, FormsModule],
+  imports: [ModalComponent, FormsModule, BuscadorComponent],
   template: `
     <app-modal [abierto]="abierto" [titulo]="producto ? 'Editar producto' : 'Nuevo producto'" tam="lg" (cerrar)="cerrar.emit()">
       <form (ngSubmit)="guardar()" class="row g-3">
@@ -18,10 +19,7 @@ import { ModalComponent } from './modal.component';
         <div class="col-md-6"><label class="form-label">Marca</label><input class="form-control" [(ngModel)]="f.marca" name="marca"></div>
         <div class="col-md-6"><label class="form-label">Categoría</label>
           <div class="input-group">
-            <select class="form-select" [(ngModel)]="f.categoria_id" name="categoria_id">
-              <option [ngValue]="null">Sin categoría</option>
-              @for (c of store.categoriasOrdenadas(); track c.id) { <option [ngValue]="c.id">{{ c.nombre }}</option> }
-            </select>
+            <app-buscador class="en-grupo" placeholder="Escribe para buscar" vacio="Sin categoría" [vacioValor]="null" [opciones]="catOpciones()" [(ngModel)]="f.categoria_id" name="categoria_id" />
             <button type="button" class="btn btn-outline-dark" (click)="nuevaCat.set(!nuevaCat())"><i class="bi bi-plus-lg"></i> Nueva</button>
           </div>
           @if (nuevaCat()) {
@@ -43,7 +41,7 @@ import { ModalComponent } from './modal.component';
             </div>
           }
         </div>
-        <div class="col-md-6"><label class="form-label">Stock actual</label><input class="form-control num" type="number" min="0" [(ngModel)]="f.stock" name="stock" required></div>
+        @if (!(sinStock && !producto)) { <div class="col-md-6"><label class="form-label">Stock actual</label><input class="form-control num" type="number" min="0" [(ngModel)]="f.stock" name="stock" required></div> }
         <div class="col-md-6"><label class="form-label">Avisar cuando baje de</label><input class="form-control num" type="number" min="0" [(ngModel)]="f.stock_minimo" name="smin" required></div>
         <div class="col-12"><label class="form-label">Foto del producto</label>
           <div class="d-flex gap-3 align-items-center">
@@ -64,8 +62,11 @@ export class ProductoFormComponent implements OnChanges {
   private api = inject(ApiService);
   private toast = inject(ToastService);
   store = inject(StoreService);
+  catOpciones = computed(() => this.store.categoriasOrdenadas().map((c: any) => ({ valor: c.id, texto: c.nombre })));
   @Input() abierto = false;
   @Input() producto: any = null;
+  /** Creado desde una compra: el stock lo pone la compra, no el formulario. */
+  @Input() sinStock = false;
   @Output() cerrar = new EventEmitter<void>();
   @Output() guardado = new EventEmitter<any>();
 
@@ -110,7 +111,7 @@ export class ProductoFormComponent implements OnChanges {
       if (this.archivo) { this.guardando.set('Subiendo foto…'); this.f.imagen_url = await this.api.subirImagen(this.archivo); }
       this.guardando.set('Guardando…');
       const { stock, ...datos } = { ...this.f, nombre: this.f.nombre.trim(), marca: this.f.marca.trim() || null, descripcion: this.f.descripcion.trim() || null };
-      const stockNuevo = Number(stock) || 0;
+      const stockNuevo = (this.sinStock && !this.producto) ? 0 : (Number(stock) || 0);
       let res: any;
       if (!this.producto) {
         res = await this.api.crearProducto({ ...datos, stock: 0 });

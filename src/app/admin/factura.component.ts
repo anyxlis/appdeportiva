@@ -6,13 +6,14 @@ import { StoreService } from '../core/store.service';
 import { ToastService } from '../core/toast.service';
 import { hoyISO, money } from '../core/format';
 import { PIPES } from '../shared/pipes';
+import { BuscadorComponent } from '../shared/buscador.component';
 
-interface Linea { producto_id: string; nombre_producto: string; cantidad: number; precio_unitario: number; costo_unitario: number; }
+interface Linea { producto_id: string; nombre_producto: string; cantidad: number; precio_unitario: number; costo_unitario: number; descuento_pct: number; }
 
 @Component({
   selector: 'app-factura',
   standalone: true,
-  imports: [FormsModule, RouterLink, ...PIPES],
+  imports: [FormsModule, RouterLink, BuscadorComponent, ...PIPES],
   template: `
     <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
       <div><div class="eyebrow">El stock se descuenta al guardar · si la fecha de cobro es posterior, queda a crédito</div><h1 class="display-6 fw-bold mb-0">Factura de venta</h1></div>
@@ -52,6 +53,8 @@ interface Linea { producto_id: string; nombre_producto: string; cantidad: number
           <dl class="row small mb-0 flex-grow-1 align-content-start gy-2">
             <dt class="col-7 fw-normal opacity-75">Ítems</dt><dd class="col-5 text-end cifra">{{ validas().length }}</dd>
             <dt class="col-7 fw-normal opacity-75">Unidades</dt><dd class="col-5 text-end cifra">{{ unidades() }}</dd>
+            <dt class="col-7 fw-normal opacity-75">Subtotal</dt><dd class="col-5 text-end cifra">{{ subtotal() | money }}</dd>
+            <dt class="col-7 fw-normal opacity-75">Descuento</dt><dd class="col-5 text-end cifra">{{ subtotal() - total() | money }}</dd>
             <dt class="col-7 fw-normal opacity-75">Costo</dt><dd class="col-5 text-end cifra">{{ costo() | money }}</dd>
             <dt class="col-7 fw-normal opacity-75">Ganancia</dt><dd class="col-5 text-end cifra" [class.text-danger]="total() - costo() < 0" [class.text-success]="total() - costo() >= 0">{{ total() - costo() | money }}</dd>
           </dl>
@@ -65,24 +68,22 @@ interface Linea { producto_id: string; nombre_producto: string; cantidad: number
           <div class="d-flex gap-2"><button type="button" class="btn btn-outline-danger btn-sm" (click)="lineas.set([])"><i class="bi bi-trash"></i> Limpiar</button>
           <button type="button" class="btn btn-dark btn-sm" (click)="agregar()"><i class="bi bi-plus-lg"></i> Agregar línea</button></div></div>
         <div class="table-responsive"><table class="table align-middle">
-          <thead><tr><th style="width:40px">#</th><th>Producto</th><th style="width:120px" class="text-end">Cantidad</th><th style="width:160px" class="text-end">Valor unitario</th><th style="width:150px" class="text-end">Valor total</th><th style="width:44px"></th></tr></thead>
+          <thead><tr><th style="width:40px">#</th><th>Producto</th><th style="width:120px" class="text-end">Cantidad</th><th style="width:150px" class="text-end">Valor unitario</th><th style="width:100px" class="text-end">% Desc.</th><th style="width:150px" class="text-end">Valor total</th><th style="width:44px"></th></tr></thead>
           <tbody>
             @for (l of lineas(); track $index; let i = $index) {
               <tr>
                 <td class="text-tenue">{{ i + 1 }}</td>
                 <td>
-                  <select class="form-select" [ngModel]="l.producto_id" [ngModelOptions]="{standalone:true}" (ngModelChange)="elegir(i, $event)">
-                    <option value="">— Selecciona —</option>
-                    @for (p of opciones(l.producto_id); track p.id) { <option [value]="p.id">{{ p.nombre }}{{ p.marca ? ' · ' + p.marca : '' }} ({{ disponible(p.id, i) }})</option> }
-                  </select>
-                  @if (l.producto_id && l.costo_unitario > l.precio_unitario) { <div class="small text-danger mt-1"><i class="bi bi-exclamation-triangle"></i> Costo {{ fmt(l.costo_unitario) }} por unidad, mayor que el precio. Revisa el precio de fábrica en Inventario.</div> }
+                  <app-buscador placeholder="— Escribe para buscar —" [opciones]="opcionesBusq(l.producto_id, i)" [ngModel]="l.producto_id" [ngModelOptions]="{standalone:true}" (ngModelChange)="elegir(i, $event)" />
+                  @if (l.producto_id && l.costo_unitario > neto(l)) { <div class="small text-danger mt-1"><i class="bi bi-exclamation-triangle"></i> Costo {{ fmt(l.costo_unitario) }} por unidad, mayor que el precio. Revisa el precio de fábrica en Inventario.</div> }
                 </td>
                 <td><input class="form-control num" type="number" min="1" [ngModel]="l.cantidad" [ngModelOptions]="{standalone:true}" (change)="cantidad(i, $any($event.target).value)"></td>
                 <td><input class="form-control num" type="number" min="0" [ngModel]="l.precio_unitario" [ngModelOptions]="{standalone:true}" (change)="precio(i, $any($event.target).value)"></td>
-                <td class="text-end fw-bold cifra">{{ l.cantidad * l.precio_unitario | money }}</td>
+                <td><input class="form-control num" type="number" min="0" max="100" step="any" [ngModel]="l.descuento_pct" [ngModelOptions]="{standalone:true}" (change)="descPct(i, $any($event.target).value)"></td>
+                <td class="text-end fw-bold cifra">{{ l.cantidad * neto(l) | money }}</td>
                 <td><button type="button" class="btn btn-sm btn-link text-danger" (click)="quitar(i)"><i class="bi bi-x-lg"></i></button></td>
               </tr>
-            } @empty { <tr><td colspan="6" class="text-center text-secondary py-4">Sin líneas todavía. Usa «Agregar línea».</td></tr> }
+            } @empty { <tr><td colspan="7" class="text-center text-secondary py-4">Sin líneas todavía. Usa «Agregar línea».</td></tr> }
           </tbody>
         </table></div>
       </div></div></div>
@@ -101,7 +102,10 @@ export class FacturaComponent implements OnInit {
   guardando = signal(false);
   tipos = computed(() => this.store.tiposDoc().length ? this.store.tiposDoc() : [{ codigo: 'FV', nombre: 'Factura de venta' }]);
   validas = computed(() => this.lineas().filter((l) => l.producto_id));
-  total = computed(() => this.lineas().reduce((s, l) => s + l.precio_unitario * l.cantidad, 0));
+  /** Precio unitario ya con el % de descuento de la línea (igual que lo calcula la base). */
+  neto = (l: Linea) => Math.round(l.precio_unitario * (1 - (l.descuento_pct || 0) / 100) * 100) / 100;
+  subtotal = computed(() => this.lineas().reduce((s, l) => s + l.precio_unitario * l.cantidad, 0));
+  total = computed(() => this.lineas().reduce((s, l) => s + this.neto(l) * l.cantidad, 0));
   costo = computed(() => this.lineas().reduce((s, l) => s + l.costo_unitario * l.cantidad, 0));
   unidades = computed(() => this.validas().reduce((s, l) => s + l.cantidad, 0));
   credito = () => this.fechaCobro > this.fechaVenta;
@@ -116,8 +120,9 @@ export class FacturaComponent implements OnInit {
   opciones(sel: string) {
     return this.store.productos().filter((p) => p.activo && (Number(p.stock) > 0 || p.id === sel)).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   }
+  opcionesBusq(sel: string, i: number) { return this.opciones(sel).map((p) => ({ valor: p.id, texto: `${p.nombre}${p.marca ? ' · ' + p.marca : ''} (${this.disponible(p.id, i)})` })); }
   private cambiar(i: number, f: (l: Linea) => Linea) { this.lineas.update((ls) => ls.map((l, j) => j === i ? f({ ...l }) : l)); }
-  agregar() { this.lineas.update((l) => [...l, { producto_id: '', nombre_producto: '', cantidad: 1, precio_unitario: 0, costo_unitario: 0 }]); }
+  agregar() { this.lineas.update((l) => [...l, { producto_id: '', nombre_producto: '', cantidad: 1, precio_unitario: 0, costo_unitario: 0, descuento_pct: 0 }]); }
   quitar(i: number) { this.lineas.update((l) => l.filter((_, j) => j !== i)); }
   elegir(i: number, id: string) {
     const p = this.store.productos().find((x) => x.id === id);
@@ -130,6 +135,7 @@ export class FacturaComponent implements OnInit {
     if (c > max) { this.toast.error(`Solo hay ${max} de ${l.nombre_producto}`); c = Math.max(1, max); }
     this.cambiar(i, (x) => ({ ...x, cantidad: c }));
   }
+  descPct(i: number, v: string) { this.cambiar(i, (x) => ({ ...x, descuento_pct: Math.min(100, Math.max(0, Number(v) || 0)) })); }
   precio(i: number, v: string) { this.cambiar(i, (x) => ({ ...x, precio_unitario: Math.max(0, Number(v) || 0) })); }
 
   async guardar() {

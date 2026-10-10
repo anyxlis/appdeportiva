@@ -386,10 +386,11 @@ function modalProducto(p = null, volver = 'productos') {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btnGuardar = form.querySelector('button[type="submit"]');
+    if (btnGuardar.disabled) return;
     const textoOriginal = btnGuardar.textContent;
+    btnGuardar.disabled = true;
     try {
       if (archivoElegido) {
-        btnGuardar.disabled = true;
         btnGuardar.textContent = 'Subiendo foto…';
         const url = await apiProductos.subirImagen(archivoElegido);
         form.imagen_url.value = url;
@@ -398,7 +399,7 @@ function modalProducto(p = null, volver = 'productos') {
       const datos = { nombre: f.get('nombre').trim(), marca: f.get('marca').trim() || null, categoria_id: f.get('categoria_id') || null, precio_fabrica: +f.get('precio_fabrica'), precio_venta: +f.get('precio_venta'), stock: +f.get('stock'), stock_minimo: +f.get('stock_minimo'), imagen_url: f.get('imagen_url').trim() || null, descripcion: f.get('descripcion').trim() || null, activo: f.get('activo') === 'on' };
       btnGuardar.textContent = esNuevo ? 'Creando…' : 'Guardando…';
       // El stock se mueve con entradas registradas, así cuenta como inversión en mercancía
-      const stockNuevo = datos.stock;
+      const stockNuevo = (volver === 'compra' && esNuevo) ? 0 : datos.stock; // desde una compra, la compra pone el stock
       delete datos.stock;
       if (esNuevo) {
         const creado = await apiProductos.crear({ ...datos, stock: 0 });

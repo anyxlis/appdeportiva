@@ -121,3 +121,8 @@ input.num { text-align: right; font-family: $font-family-monospace; }
 
 // Barra de progreso fina
 .nivel { height: 6px; border-radius: 3px; background: #ece5d8; overflow: hidden; > span { display: block; height: 100%; background: $success; border-radius: 3px; } }
+
+// Inputs numéricos sin flechitas: se digitan
+input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }

@@ -16,4 +16,11 @@ import { ToastService } from './core/toast.service';
       }
     </div>`
 })
-export class AppComponent { toast = inject(ToastService); }
+export class AppComponent {
+  toast = inject(ToastService);
+  constructor() {
+    // Inputs numéricos: se digitan. La rueda del mouse y las flechas del teclado no cambian el valor.
+    document.addEventListener('wheel', (e) => { const t = e.target; if (t instanceof HTMLInputElement && t.type === 'number') t.blur(); }, { passive: true });
+    document.addEventListener('keydown', (e) => { const t = e.target; if (t instanceof HTMLInputElement && t.type === 'number' && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) e.preventDefault(); });
+  }
+}
